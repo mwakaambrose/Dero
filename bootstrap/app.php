@@ -5,6 +5,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\S3\AssignRequestId;
 use App\Http\Middleware\S3\AuthorizeS3Operation;
 use App\Http\Middleware\S3\CaptureSignedRequest;
+use App\Http\Middleware\S3\HandleBucketCors;
 use App\Http\Middleware\S3\ResolveAccessKey;
 use App\Http\Middleware\S3\ResolveBucket;
 use App\Http\Middleware\S3\VerifyAwsSignature;
@@ -81,6 +82,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ResolveAccessKey::class,
             VerifyAwsSignature::class,
             ResolveBucket::class,
+            // Between bucket resolution and authorization: the rules live on
+            // the bucket, and a preflight must be answered without credentials.
+            HandleBucketCors::class,
             AuthorizeS3Operation::class,
         ]);
     })

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\S3\Http;
 
 use App\Http\Controllers\S3\BucketController;
+use App\Http\Controllers\S3\BucketCorsController;
 use App\Http\Controllers\S3\MultipartController;
 use App\Http\Controllers\S3\ObjectController;
 use App\Http\Controllers\S3\ObjectListController;
@@ -43,8 +44,26 @@ final class S3Routes
             Route::get('/', [ServiceController::class, 'listBuckets']);
         }
 
-        Route::put($bucketUri, [BucketController::class, 'create']);
-        Route::delete($bucketUri, [BucketController::class, 'delete']);
+        Route::put($bucketUri, function (Request $request) {
+            return $request->query->has('cors')
+                ? app(BucketCorsController::class)->put($request)
+                : app(BucketController::class)->create($request);
+        });
+
+        Route::delete($bucketUri, function (Request $request) {
+            return $request->query->has('cors')
+                ? app(BucketCorsController::class)->delete($request)
+                : app(BucketController::class)->delete($request);
+        });
+
+        /*
+         | OPTIONS exists only so routing resolves; HandleBucketCors answers the
+         | preflight before the request ever reaches a controller. Without these
+         | the catch-all below would turn every preflight into MethodNotAllowed.
+         */
+        Route::options($bucketUri, fn () => response('', 200));
+        Route::options($virtualHost ? '/{key}' : '/{bucket}/{key}', fn () => response('', 200))
+            ->where('key', '.*');
 
         /*
          | GET and HEAD on a bucket share one route.
@@ -64,6 +83,7 @@ final class S3Routes
 
             return match (true) {
                 $request->query->has('location') => app(BucketController::class)->location($request),
+                $request->query->has('cors') => app(BucketCorsController::class)->get($request),
                 $request->query->has('uploads') => app(MultipartController::class)->listUploads($request),
                 // list-type=2 selects ListObjectsV2; its absence means a client
                 // still speaking v1, which is a different response shape rather

@@ -17,6 +17,15 @@ final class AuthorizeS3Operation
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // A CORS preflight carries no credentials by design — browsers strip
+        // them — so it cannot be authorised. HandleBucketCors has already
+        // answered any preflight the bucket's rules allow; anything reaching
+        // here is an OPTIONS on a bucket with no CORS configuration, which
+        // routing answers with an empty 200 and no CORS headers.
+        if ($request->isMethod('OPTIONS')) {
+            return $next($request);
+        }
+
         $key = $request->attributes->get('s3.access_key');
         $bucket = $request->attributes->get('s3.bucket');
         $required = OperationPermission::forRequest($request);
@@ -38,13 +47,19 @@ final class AuthorizeS3Operation
     }
 
     /**
-     * A PUT on a bucket path with no object key is CreateBucket.
+     * A PUT on a bucket path with no object key and no sub-resource marker is
+     * CreateBucket.
+     *
+     * The sub-resource check matters: PUT ?cors targets a bucket that already
+     * exists, and treating it as CreateBucket would hand it the ownership
+     * exemption — letting one team rewrite another team's CORS policy.
      */
     private function isCreateBucket(Request $request): bool
     {
         return $request->isMethod('PUT')
             && $request->route('bucket') !== null
-            && $request->route('key') === null;
+            && $request->route('key') === null
+            && ! $request->query->has('cors');
     }
 
     /**
