@@ -17,6 +17,12 @@ use Illuminate\Support\Facades\Route;
  */
 
 /*
+ | Placeholder bucket route so ResolveBucket has a {bucket} parameter to work
+ | with. Replaced by the real service and bucket operations in a later task.
+ */
+Route::match(['GET', 'HEAD', 'PUT', 'DELETE', 'POST'], '/{bucket}', fn () => response('', 200));
+
+/*
  | Terminal catch-all.
  |
  | Deliberately an explicit route rather than Route::fallback(). Fallback routes

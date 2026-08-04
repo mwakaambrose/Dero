@@ -79,6 +79,30 @@ final class SignsRequests
     }
 
     /**
+     * Convert headers into the server variables Laravel's test client expects.
+     *
+     * TestCase::call() reads $serverVariables and ignores the defaultHeaders
+     * that withHeaders() sets, so `withHeaders(...)->call(...)` sends nothing
+     * and the request arrives anonymous. Tests that need an arbitrary verb must
+     * pass headers through here instead.
+     *
+     * @param  array<string, string>  $headers
+     * @return array<string, string>
+     */
+    public static function serverVars(array $headers): array
+    {
+        $server = [];
+
+        foreach ($headers as $name => $value) {
+            $name = strtoupper(str_replace('-', '_', $name));
+
+            $server[str_starts_with($name, 'HTTP_') ? $name : 'HTTP_'.$name] = $value;
+        }
+
+        return $server;
+    }
+
+    /**
      * Build a presigned URL, exactly as `aws s3 presign` would.
      *
      * @param  array<string, string>  $query

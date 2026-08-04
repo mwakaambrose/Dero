@@ -3,7 +3,9 @@
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\S3\AssignRequestId;
+use App\Http\Middleware\S3\AuthorizeS3Operation;
 use App\Http\Middleware\S3\ResolveAccessKey;
+use App\Http\Middleware\S3\ResolveBucket;
 use App\Http\Middleware\S3\ResolveVirtualHostBucket;
 use App\Http\Middleware\S3\VerifyAwsSignature;
 use App\Http\Middleware\SetTeamUrlDefaults;
@@ -79,6 +81,8 @@ return Application::configure(basePath: dirname(__DIR__))
             AssignRequestId::class,
             ResolveAccessKey::class,
             VerifyAwsSignature::class,
+            ResolveBucket::class,
+            AuthorizeS3Operation::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
