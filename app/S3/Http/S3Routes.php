@@ -72,6 +72,17 @@ final class S3Routes
         // parameter at the first slash and "photos/2026/q1.pdf" never routes.
         Route::put($objectUri, [ObjectController::class, 'put'])->where('key', '.*');
 
+        // GET and HEAD share a route for the same reason as the bucket routes:
+        // Laravel appends HEAD to every GET route, so a standalone HEAD route
+        // would be silently replaced.
+        Route::match(['GET', 'HEAD'], $objectUri, function (Request $request) {
+            $controller = app(ObjectController::class);
+
+            return $request->isMethod('HEAD')
+                ? $controller->head($request)
+                : $controller->get($request);
+        })->where('key', '.*');
+
         /*
          | Terminal catch-all.
          |
