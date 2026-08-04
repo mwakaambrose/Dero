@@ -2,111 +2,103 @@
 
 declare(strict_types=1);
 
-use App\Http\Middleware\S3\ResolveVirtualHostBucket;
+use App\Models\AccessKey;
+use App\Models\Bucket;
+use App\Models\S3Object;
 use App\S3\Auth\SignedRequest;
-use Illuminate\Http\Request;
+use Illuminate\Foundation\Http\Events\RequestHandled;
+use Illuminate\Support\Facades\Event;
+use Tests\Helpers\SignsRequests;
 
-function passThrough(Request $request): Request
+beforeEach(function () {
+    $this->key = AccessKey::factory()->create();
+    $this->bucket = Bucket::factory()->create([
+        'team_id' => $this->key->team_id,
+        'name' => 'photos',
+    ]);
+});
+
+/**
+ * @param  array<string, string>  $query
+ */
+function callHost(AccessKey $key, string $host, string $path, array $query = [], string $method = 'GET')
 {
-    $captured = $request;
+    $url = 'http://'.$host.$path.($query === [] ? '' : '?'.http_build_query($query));
+    $headers = SignsRequests::headers($key, $method, $host, $path, $query);
 
-    (new ResolveVirtualHostBucket)->handle($request, function (Request $inbound) use (&$captured) {
-        $captured = $inbound;
-
-        return response('');
-    });
-
-    return $captured;
+    return test()->call($method, $url, server: SignsRequests::serverVars($headers));
 }
 
-it('rewrites a virtual-host request into path style', function () {
-    $request = Request::create('http://photos.s3.dero.test/cat.jpg', 'GET');
+it('serves a bucket over virtual-host addressing', function () {
+    S3Object::factory()->for($this->bucket)->withKey('cat.jpg')
+        ->create(['team_id' => $this->bucket->team_id]);
 
-    expect(passThrough($request)->getPathInfo())->toBe('/photos/cat.jpg');
+    $response = callHost($this->key, 'photos.s3.dero.test', '/', ['list-type' => '2']);
+
+    $response->assertOk();
+    expect($response->getContent())->toContain('<Name>photos</Name>')
+        ->and($response->getContent())->toContain('cat.jpg');
 });
 
-it('rewrites a virtual-host bucket root into a path-style bucket root', function () {
-    $request = Request::create('http://photos.s3.dero.test/', 'GET');
+it('serves the same bucket over path-style addressing', function () {
+    S3Object::factory()->for($this->bucket)->withKey('cat.jpg')
+        ->create(['team_id' => $this->bucket->team_id]);
 
-    expect(passThrough($request)->getPathInfo())->toBe('/photos');
+    $response = callHost($this->key, 's3.dero.test', '/photos', ['list-type' => '2']);
+
+    $response->assertOk();
+    expect($response->getContent())->toContain('cat.jpg');
 });
 
-it('preserves the query string while rewriting', function () {
-    $request = Request::create('http://photos.s3.dero.test/?list-type=2&prefix=a/', 'GET');
-    $rewritten = passThrough($request);
-
-    expect($rewritten->getPathInfo())->toBe('/photos')
-        ->and($rewritten->query->get('list-type'))->toBe('2')
-        ->and($rewritten->query->get('prefix'))->toBe('a/');
+it('verifies the signature against the virtual-host uri the client actually signed', function () {
+    // The client signs path "/" with host "photos.s3.dero.test". Rewriting the
+    // request to "/photos" before verification would break every virtual-host
+    // signature, which is why routing handles the two styles instead.
+    callHost($this->key, 'photos.s3.dero.test', '/', ['list-type' => '2'])->assertOk();
 });
 
-it('records the bucket it resolved from the host', function () {
-    $request = Request::create('http://photos.s3.dero.test/cat.jpg', 'GET');
+it('resolves the bucket from the domain parameter', function () {
+    $response = callHost($this->key, 'photos.s3.dero.test', '/', ['location' => '']);
 
-    expect(passThrough($request)->attributes->get('s3.virtual_host_bucket'))->toBe('photos');
+    expect($response->getContent())->toContain('us-east-1');
 });
 
-it('rewrites the host to the bare endpoint so the route group matches', function () {
-    // Route::domain('s3.dero.test') does not match 'photos.s3.dero.test', so
-    // the host is folded down along with the path.
-    $request = Request::create('http://photos.s3.dero.test/cat.jpg', 'GET');
+it('reports NoSuchBucket for an unknown bucket subdomain', function () {
+    $response = callHost($this->key, 'missing.s3.dero.test', '/', ['list-type' => '2']);
 
-    expect(passThrough($request)->getHost())->toBe('s3.dero.test');
+    $response->assertStatus(404);
+    expect($response->getContent())->toContain('<Code>NoSuchBucket</Code>');
 });
 
-it('leaves requests for other hosts entirely alone', function () {
-    // This runs as global middleware, so it must not touch dashboard traffic.
-    $request = Request::create('http://localhost/dashboard', 'GET');
-    $result = passThrough($request);
+it('denies a virtual-host request for another team\'s bucket', function () {
+    Bucket::factory()->create(['name' => 'theirs']);
 
-    expect($result->getPathInfo())->toBe('/dashboard')
-        ->and($result->getHost())->toBe('localhost')
-        ->and($result->attributes->has('s3.signed_request'))->toBeFalse();
+    callHost($this->key, 'theirs.s3.dero.test', '/', ['list-type' => '2'])->assertStatus(403);
 });
 
-it('serves a virtual-host request through the s3 route group', function () {
-    // End to end through the router, not just the middleware in isolation.
-    $response = $this->get('http://photos.s3.dero.test/cat.jpg');
-
-    expect($response->headers->get('Content-Type'))->toContain('application/xml')
-        ->and($response->headers->get('x-amz-request-id'))->not->toBeEmpty();
+it('leaves the dashboard host untouched', function () {
+    $this->get('http://localhost/login')->assertOk();
 });
 
-it('leaves a path-style request untouched', function () {
-    $request = Request::create('http://s3.dero.test/photos/cat.jpg', 'GET');
+it('never serves a dashboard page on a bucket subdomain', function () {
+    $response = $this->get('http://photos.s3.dero.test/login');
 
-    expect(passThrough($request)->getPathInfo())->toBe('/photos/cat.jpg');
+    expect($response->getContent())->not->toContain('<!DOCTYPE html>');
 });
 
-it('snapshots the request as signed, before the rewrite', function () {
-    // The client signed the virtual-host URI, so the canonical path is
-    // "/cat.jpg". Snapshotting after the rewrite would compute "/photos/cat.jpg"
-    // and every virtual-host signature would fail.
-    $request = Request::create('http://photos.s3.dero.test/cat.jpg', 'GET');
+it('captures a signed request snapshot on the s3 group', function () {
+    $snapshot = null;
 
-    $snapshot = passThrough($request)->attributes->get('s3.signed_request');
+    Event::listen(
+        RequestHandled::class,
+        function ($event) use (&$snapshot): void {
+            $snapshot = $event->request->attributes->get('s3.signed_request');
+        },
+    );
+
+    callHost($this->key, 'photos.s3.dero.test', '/', ['list-type' => '2']);
 
     expect($snapshot)->toBeInstanceOf(SignedRequest::class)
-        ->and($snapshot->path)->toBe('/cat.jpg')
+        ->and($snapshot->path)->toBe('/')
         ->and($snapshot->headers['host'])->toBe('photos.s3.dero.test');
-});
-
-it('ignores a host that merely ends with the endpoint host', function () {
-    // "evils3.dero.test" must not be read as bucket "evil".
-    $request = Request::create('http://evils3.dero.test/cat.jpg', 'GET');
-
-    expect(passThrough($request)->getPathInfo())->toBe('/cat.jpg');
-});
-
-it('ignores a subdomain that is not a valid bucket name', function () {
-    $request = Request::create('http://Not_Valid.s3.dero.test/cat.jpg', 'GET');
-
-    expect(passThrough($request)->getPathInfo())->toBe('/cat.jpg');
-});
-
-it('preserves the request body while rewriting', function () {
-    // Re-initialising the request must not consume or discard the upload body.
-    $request = Request::create('http://photos.s3.dero.test/cat.jpg', 'PUT', content: 'object-bytes');
-
-    expect(passThrough($request)->getContent())->toBe('object-bytes');
 });

@@ -4,9 +4,9 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\S3\AssignRequestId;
 use App\Http\Middleware\S3\AuthorizeS3Operation;
+use App\Http\Middleware\S3\CaptureSignedRequest;
 use App\Http\Middleware\S3\ResolveAccessKey;
 use App\Http\Middleware\S3\ResolveBucket;
-use App\Http\Middleware\S3\ResolveVirtualHostBucket;
 use App\Http\Middleware\S3\VerifyAwsSignature;
 use App\Http\Middleware\SetTeamUrlDefaults;
 use App\S3\Exceptions\InternalErrorException;
@@ -45,6 +45,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // exposed at all, rather than mounting a wildcard /{bucket}/{key}
             // route at the application root.
             if (is_string($host) && $host !== '') {
+                // Virtual-host style first: its domain pattern is more specific
+                // than the bare endpoint host, and the bucket arrives as a
+                // domain parameter.
+                Route::domain('{bucket}.'.$host)
+                    ->middleware('s3')
+                    ->group(base_path('routes/s3-virtual-host.php'));
+
                 Route::domain($host)
                     ->middleware('s3')
                     ->group(base_path('routes/s3.php'));
@@ -68,17 +75,9 @@ return Application::configure(basePath: dirname(__DIR__))
          | no VerifyCsrfToken, no Inertia, no cookies. Requests are authenticated
          | solely by AWS Signature V4.
          */
-        /*
-         | Virtual-host folding must happen before the router runs:
-         | Route::domain('s3.example.com') does not match
-         | 'bucket.s3.example.com', and group middleware only runs once a route
-         | has already been matched. The middleware no-ops for every host that
-         | is not the S3 endpoint.
-         */
-        $middleware->prepend(ResolveVirtualHostBucket::class);
-
         $middleware->group('s3', [
             AssignRequestId::class,
+            CaptureSignedRequest::class,
             ResolveAccessKey::class,
             VerifyAwsSignature::class,
             ResolveBucket::class,
