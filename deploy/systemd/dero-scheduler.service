@@ -1,0 +1,23 @@
+[Unit]
+Description=Dero scheduled tasks
+After=network.target mysql.service
+
+[Service]
+Type=oneshot
+User=dero
+Group=dero
+WorkingDirectory=/var/www/dero
+EnvironmentFile=/var/www/dero/.env
+
+# Drives the multipart and temp-file sweepers. Without this running, abandoned
+# multipart parts accumulate on disk indefinitely — nothing else reclaims them.
+ExecStart=/usr/bin/php artisan schedule:run
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/dero-storage /var/www/dero/storage /var/www/dero/bootstrap/cache
+
+StandardOutput=journal
+StandardError=journal

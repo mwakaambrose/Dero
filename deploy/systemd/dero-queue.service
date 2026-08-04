@@ -1,0 +1,38 @@
+[Unit]
+Description=Dero queue worker
+After=network.target mysql.service redis-server.service
+Requires=mysql.service
+
+[Service]
+Type=simple
+User=dero
+Group=dero
+WorkingDirectory=/var/www/dero
+EnvironmentFile=/var/www/dero/.env
+
+# --max-time recycles the worker hourly, which bounds the effect of any leak in
+# a long-lived PHP process. --tries retries transient failures without looping
+# forever on a poison job.
+ExecStart=/usr/bin/php artisan queue:work --tries=3 --max-time=3600 --sleep=3
+
+Restart=always
+RestartSec=5
+
+# A genuinely broken worker should stop and stay stopped rather than hammer the
+# box. Without these it restarts every 5 seconds indefinitely.
+StartLimitBurst=5
+StartLimitIntervalSec=120
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# The only two paths the worker may write to. Update the first if STORAGE_ROOT
+# is elsewhere.
+ReadWritePaths=/srv/dero-storage /var/www/dero/storage /var/www/dero/bootstrap/cache
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

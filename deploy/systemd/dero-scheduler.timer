@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Dero scheduled tasks every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=1s
+
+# A systemd timer rather than a crontab entry, so scheduling is visible to the
+# same tooling as everything else:  systemctl list-timers 'dero-*'
+
+[Install]
+WantedBy=timers.target
