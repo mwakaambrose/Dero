@@ -3,6 +3,7 @@
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\S3\AssignRequestId;
+use App\Http\Middleware\S3\ResolveVirtualHostBucket;
 use App\Http\Middleware\SetTeamUrlDefaults;
 use App\S3\Exceptions\InternalErrorException;
 use App\S3\Exceptions\MethodNotAllowedException;
@@ -63,6 +64,15 @@ return Application::configure(basePath: dirname(__DIR__))
          | no VerifyCsrfToken, no Inertia, no cookies. Requests are authenticated
          | solely by AWS Signature V4.
          */
+        /*
+         | Virtual-host folding must happen before the router runs:
+         | Route::domain('s3.example.com') does not match
+         | 'bucket.s3.example.com', and group middleware only runs once a route
+         | has already been matched. The middleware no-ops for every host that
+         | is not the S3 endpoint.
+         */
+        $middleware->prepend(ResolveVirtualHostBucket::class);
+
         $middleware->group('s3', [
             AssignRequestId::class,
         ]);
