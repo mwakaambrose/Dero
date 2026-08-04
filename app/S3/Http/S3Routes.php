@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\S3\Http;
 
 use App\Http\Controllers\S3\BucketController;
+use App\Http\Controllers\S3\MultipartController;
 use App\Http\Controllers\S3\ObjectController;
 use App\Http\Controllers\S3\ObjectListController;
 use App\Http\Controllers\S3\ServiceController;
@@ -69,9 +70,20 @@ final class S3Routes
 
         $objectUri = $virtualHost ? '/{key}' : '/{bucket}/{key}';
 
-        // where('key', '.*') is required: without it Laravel stops the
-        // parameter at the first slash and "photos/2026/q1.pdf" never routes.
-        Route::put($objectUri, [ObjectController::class, 'put'])->where('key', '.*');
+        /*
+         | Object routes.
+         |
+         | where('key', '.*') is required: without it Laravel stops the
+         | parameter at the first slash and "photos/2026/q1.pdf" never routes.
+         |
+         | Multipart operations share these URIs and are distinguished only by
+         | query parameters, so each verb dispatches by hand.
+         */
+        Route::put($objectUri, function (Request $request) {
+            return $request->query->has('uploadId') && $request->query->has('partNumber')
+                ? app(MultipartController::class)->upload($request)
+                : app(ObjectController::class)->put($request);
+        })->where('key', '.*');
 
         // GET and HEAD share a route for the same reason as the bucket routes:
         // Laravel appends HEAD to every GET route, so a standalone HEAD route
@@ -79,12 +91,30 @@ final class S3Routes
         Route::match(['GET', 'HEAD'], $objectUri, function (Request $request) {
             $controller = app(ObjectController::class);
 
-            return $request->isMethod('HEAD')
-                ? $controller->head($request)
+            if ($request->isMethod('HEAD')) {
+                return $controller->head($request);
+            }
+
+            return $request->query->has('uploadId')
+                ? app(MultipartController::class)->listParts($request)
                 : $controller->get($request);
         })->where('key', '.*');
 
-        Route::delete($objectUri, [ObjectController::class, 'delete'])->where('key', '.*');
+        Route::delete($objectUri, function (Request $request) {
+            return $request->query->has('uploadId')
+                ? app(MultipartController::class)->abort($request)
+                : app(ObjectController::class)->delete($request);
+        })->where('key', '.*');
+
+        Route::post($objectUri, function (Request $request) {
+            $controller = app(MultipartController::class);
+
+            return match (true) {
+                $request->query->has('uploads') => $controller->create($request),
+                $request->query->has('uploadId') => $controller->complete($request),
+                default => throw new NotImplementedException('POST object'),
+            };
+        })->where('key', '.*');
 
         // POST on a bucket carries DeleteObjects, selected by "?delete".
         Route::post($bucketUri, function (Request $request) {
