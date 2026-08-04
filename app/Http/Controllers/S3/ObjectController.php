@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\S3;
 
+use App\Actions\S3\CopyObject;
+use App\Actions\S3\DeleteObject;
 use App\Actions\S3\PutObject;
 use App\Http\Controllers\Controller;
+use App\Models\AccessKey;
 use App\Models\Bucket;
 use App\Models\S3Object;
 use App\S3\Exceptions\AccessDeniedException;
 use App\S3\Exceptions\NoSuchKeyException;
+use App\S3\Exceptions\S3Exception;
 use App\S3\Http\ObjectMetadata;
 use App\S3\Http\RangeHeader;
 use App\S3\Http\RequestBodyStream;
 use App\S3\Values\ObjectKey;
+use App\S3\Xml\XmlReader;
+use App\S3\Xml\XmlWriter;
 use App\Storage\Contracts\ObjectStorageBackend;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -23,6 +29,8 @@ final class ObjectController extends Controller
 {
     public function __construct(
         private readonly PutObject $putObject,
+        private readonly DeleteObject $deleteObject,
+        private readonly CopyObject $copyObject,
         private readonly ObjectStorageBackend $storage,
     ) {}
 
@@ -33,6 +41,10 @@ final class ObjectController extends Controller
     {
         $bucket = $this->bucket($request);
         $objectKey = ObjectKey::fromString($this->key($request));
+
+        if ($request->headers->has('x-amz-copy-source')) {
+            return $this->copy($request, $bucket, $objectKey);
+        }
 
         $stream = RequestBodyStream::open($request);
 
@@ -50,6 +62,95 @@ final class ObjectController extends Controller
         }
 
         return new Response('', 200, ['ETag' => '"'.$object->etag.'"']);
+    }
+
+    /**
+     * PUT /{bucket}/{key} with x-amz-copy-source — CopyObject.
+     */
+    private function copy(Request $request, Bucket $bucket, ObjectKey $key): Response
+    {
+        $accessKey = $request->attributes->get('s3.access_key');
+
+        // Copying reads from a bucket the middleware never authorised, so
+        // credentials are required even if the destination is public.
+        if (! $accessKey instanceof AccessKey) {
+            throw new AccessDeniedException;
+        }
+
+        $source = $this->copyObject->resolveSource(
+            (string) $request->headers->get('x-amz-copy-source'),
+            $accessKey,
+        );
+
+        $replacement = $request->headers->get('x-amz-metadata-directive') === 'REPLACE'
+            ? ObjectMetadata::fromRequest($request)
+            : null;
+
+        $object = $this->copyObject->handle($source, $bucket, $key, $replacement);
+
+        $xml = XmlWriter::render('CopyObjectResult', [
+            'ETag' => '"'.$object->etag.'"',
+            'LastModified' => $object->last_modified->toIso8601ZuluString(),
+        ], ['xmlns' => 'http://s3.amazonaws.com/doc/2006-03-01/']);
+
+        return new Response($xml, 200, ['Content-Type' => 'application/xml']);
+    }
+
+    /**
+     * DELETE /{bucket}/{key} — DeleteObject.
+     */
+    public function delete(Request $request): Response
+    {
+        $this->deleteObject->handle(
+            $this->bucket($request),
+            ObjectKey::fromString($this->key($request)),
+        );
+
+        // Always 204, whether or not the key existed: S3 DeleteObject is
+        // idempotent, and a 404 here breaks `aws s3 sync`.
+        return new Response('', 204);
+    }
+
+    /**
+     * POST /{bucket}?delete — DeleteObjects.
+     */
+    public function deleteMultiple(Request $request): Response
+    {
+        $bucket = $this->bucket($request);
+        $parsed = XmlReader::parse($request->getContent());
+        $quiet = ($parsed['Quiet'] ?? 'false') === 'true';
+
+        $deleted = [];
+        $errors = [];
+
+        foreach (XmlReader::repeated($parsed, 'Object') as $entry) {
+            $rawKey = \is_array($entry) ? ($entry['Key'] ?? null) : $entry;
+
+            if (! \is_string($rawKey) || $rawKey === '') {
+                $errors[] = ['Key' => '', 'Code' => 'InvalidArgument', 'Message' => 'The object key is missing.'];
+
+                continue;
+            }
+
+            try {
+                $this->deleteObject->handle($bucket, ObjectKey::fromString($rawKey));
+                $deleted[] = ['Key' => $rawKey];
+            } catch (S3Exception $exception) {
+                // One bad key must not fail the whole batch.
+                $errors[] = [
+                    'Key' => $rawKey,
+                    'Code' => $exception->errorCode(),
+                    'Message' => $exception->getMessage(),
+                ];
+            }
+        }
+
+        $xml = XmlWriter::render('DeleteResult', [
+            'Deleted' => $quiet ? [] : $deleted,
+            'Error' => $errors,
+        ], ['xmlns' => 'http://s3.amazonaws.com/doc/2006-03-01/']);
+
+        return new Response($xml, 200, ['Content-Type' => 'application/xml']);
     }
 
     /**

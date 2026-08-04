@@ -9,6 +9,7 @@ use App\Http\Controllers\S3\ObjectController;
 use App\Http\Controllers\S3\ObjectListController;
 use App\Http\Controllers\S3\ServiceController;
 use App\S3\Exceptions\MethodNotAllowedException;
+use App\S3\Exceptions\NotImplementedException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +83,17 @@ final class S3Routes
                 ? $controller->head($request)
                 : $controller->get($request);
         })->where('key', '.*');
+
+        Route::delete($objectUri, [ObjectController::class, 'delete'])->where('key', '.*');
+
+        // POST on a bucket carries DeleteObjects, selected by "?delete".
+        Route::post($bucketUri, function (Request $request) {
+            if (! $request->query->has('delete')) {
+                throw new NotImplementedException('POST bucket');
+            }
+
+            return app(ObjectController::class)->deleteMultiple($request);
+        });
 
         /*
          | Terminal catch-all.
