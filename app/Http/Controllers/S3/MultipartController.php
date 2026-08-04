@@ -17,6 +17,7 @@ use App\S3\Exceptions\AccessDeniedException;
 use App\S3\Exceptions\InvalidPartException;
 use App\S3\Exceptions\NoSuchUploadException;
 use App\S3\Http\ObjectMetadata;
+use App\S3\Http\PayloadDigest;
 use App\S3\Http\RangeHeader;
 use App\S3\Http\RequestBodyStream;
 use App\S3\Values\ObjectKey;
@@ -74,7 +75,9 @@ final class MultipartController extends Controller
         $stream = RequestBodyStream::open($request);
 
         try {
-            $part = $this->uploadPart->handle($upload, $partNumber, $stream);
+            $part = $this->uploadPart->handle(
+                $upload, $partNumber, $stream, PayloadDigest::expected($request),
+            );
         } finally {
             if (\is_resource($stream)) {
                 fclose($stream);

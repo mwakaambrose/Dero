@@ -174,7 +174,7 @@ final class LocalFilesystemBackend implements ObjectStorageBackend
         $path = ObjectPathGenerator::forPart($uploadId, $partNumber);
         $stored = $this->put($path, $stream);
 
-        return new StoredPart($path, $partNumber, $stored->size, $stored->md5Hex);
+        return new StoredPart($path, $partNumber, $stored->size, $stored->md5Hex, $stored->sha256Hex);
     }
 
     public function completeMultipart(string $uploadId, array $partNumbers, string $target): StoredObject

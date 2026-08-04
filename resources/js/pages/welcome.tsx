@@ -4,7 +4,6 @@ import {
     Boxes,
     CheckCircle2,
     Clock3,
-    Copy,
     FileKey2,
     KeyRound,
     Layers,
@@ -16,13 +15,16 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { CodeBlock } from '@/components/code-block';
+import type { CodeLanguage } from '@/components/code-block';
 import { Button } from '@/components/ui/button';
-import { useClipboard } from '@/hooks/use-clipboard';
 import { dashboard, login, register } from '@/routes';
 
 type Snippet = {
     id: string;
     label: string;
+    filename: string;
+    language: CodeLanguage;
     code: string;
 };
 
@@ -30,6 +32,8 @@ const SNIPPETS: Snippet[] = [
     {
         id: 'cli',
         label: 'AWS CLI',
+        filename: 'terminal',
+        language: 'bash',
         code: `aws configure --profile dero
 # Access key ID and secret come from your Dero dashboard
 
@@ -42,6 +46,8 @@ aws s3 cp report.pdf s3://production/report.pdf \\
     {
         id: 'laravel',
         label: 'Laravel',
+        filename: '.env',
+        language: 'ini',
         code: `FILESYSTEM_DISK=s3
 AWS_ACCESS_KEY_ID=DERO...
 AWS_SECRET_ACCESS_KEY=...
@@ -53,6 +59,8 @@ AWS_USE_PATH_STYLE_ENDPOINT=true`,
     {
         id: 'python',
         label: 'Python',
+        filename: 'upload.py',
+        language: 'python',
         code: `import boto3
 
 s3 = boto3.client(
@@ -67,6 +75,8 @@ s3.upload_file("report.pdf", "production", "report.pdf")`,
     {
         id: 'rclone',
         label: 'rclone',
+        filename: 'rclone.conf',
+        language: 'ini',
         code: `[dero]
 type = s3
 provider = Other
@@ -158,29 +168,6 @@ const COMPATIBILITY: { feature: string; supported: boolean; note: string }[] = [
         note: 'use disk encryption on the host',
     },
 ];
-
-function CodePanel({ snippet }: { snippet: Snippet }) {
-    const [copiedText, copy] = useClipboard();
-    const copied = copiedText === snippet.code;
-
-    return (
-        <div className="relative">
-            <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => void copy(snippet.code)}
-                className="absolute top-3 right-3 gap-1.5 text-xs"
-            >
-                <Copy className="size-3.5" />
-                {copied ? 'Copied' : 'Copy'}
-            </Button>
-            <pre className="overflow-x-auto rounded-xl border border-border bg-card p-5 pt-12 font-mono text-[13px] leading-relaxed text-foreground/90">
-                <code>{snippet.code}</code>
-            </pre>
-        </div>
-    );
-}
 
 export default function Welcome() {
     const { auth, currentTeam } = usePage().props;
@@ -369,7 +356,12 @@ export default function Welcome() {
                                 ))}
                             </div>
                         </div>
-                        <CodePanel snippet={snippet} />
+                        <CodeBlock
+                            key={snippet.id}
+                            code={snippet.code}
+                            language={snippet.language}
+                            filename={snippet.filename}
+                        />
                     </div>
                 </section>
 
@@ -448,17 +440,19 @@ export default function Welcome() {
                                 ))}
                             </ul>
                         </div>
-                        <div className="rounded-xl border border-border bg-card p-6">
-                            <p className="mb-4 flex items-center gap-2 font-mono text-xs tracking-wide text-muted-foreground uppercase">
+                        <div>
+                            <p className="mb-3 flex items-center gap-2 font-mono text-xs tracking-wide text-muted-foreground uppercase">
                                 <Terminal className="size-3.5" />
                                 Install
                             </p>
-                            <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed text-foreground/90">
-                                <code>{`git clone … dero && cd dero
+                            <CodeBlock
+                                language="bash"
+                                filename="install.sh"
+                                code={`git clone … dero && cd dero
 composer install --no-dev
 npm ci && npm run build
-php artisan migrate --force`}</code>
-                            </pre>
+php artisan migrate --force`}
+                            />
                             <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
                                 <Clock3 className="size-3.5" />
                                 Then open the dashboard and finish setup in the

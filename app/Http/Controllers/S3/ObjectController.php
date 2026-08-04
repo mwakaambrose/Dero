@@ -15,6 +15,7 @@ use App\S3\Exceptions\AccessDeniedException;
 use App\S3\Exceptions\NoSuchKeyException;
 use App\S3\Exceptions\S3Exception;
 use App\S3\Http\ObjectMetadata;
+use App\S3\Http\PayloadDigest;
 use App\S3\Http\RangeHeader;
 use App\S3\Http\RequestBodyStream;
 use App\S3\Values\ObjectKey;
@@ -54,6 +55,7 @@ final class ObjectController extends Controller
                 $objectKey,
                 $stream,
                 ObjectMetadata::fromRequest($request),
+                PayloadDigest::expected($request),
             );
         } finally {
             if (\is_resource($stream)) {

@@ -11,5 +11,6 @@ final readonly class StoredPart
         public int $partNumber,
         public int $size,
         public string $md5Hex,
+        public string $sha256Hex,
     ) {}
 }

@@ -9,9 +9,8 @@ use App\S3\Auth\ParsedAuthorization;
 use App\S3\Auth\SignatureV4Verifier;
 use App\S3\Auth\SignedRequest;
 use Closure;
-use DateTimeImmutable;
-use DateTimeZone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -41,7 +40,10 @@ final class VerifyAwsSignature
             $signed,
             $authorization,
             $key->secret_key,
-            new DateTimeImmutable('now', new DateTimeZone('UTC')),
+            // Read through Carbon rather than constructed directly, so expiry
+            // and clock-skew behaviour is reachable from a time-travelling test
+            // instead of only from a machine with a wrong clock.
+            Carbon::now('UTC')->toDateTimeImmutable(),
         );
 
         // Touched only after verification succeeds, so a failed probe cannot be

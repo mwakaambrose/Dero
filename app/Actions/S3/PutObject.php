@@ -6,8 +6,10 @@ namespace App\Actions\S3;
 
 use App\Models\Bucket;
 use App\Models\S3Object;
+use App\S3\Exceptions\ContentSha256MismatchException;
 use App\S3\Exceptions\EntityTooLargeException;
 use App\S3\Http\ObjectMetadata;
+use App\S3\Http\PayloadDigest;
 use App\S3\Values\ObjectKey;
 use App\Storage\Contracts\ObjectStorageBackend;
 use App\Storage\ObjectPathGenerator;
@@ -20,9 +22,16 @@ final class PutObject
 
     /**
      * @param  resource  $stream
+     * @param  string|null  $expectedSha256  the digest the client signed, when
+     *                                       it committed to one
      */
-    public function handle(Bucket $bucket, ObjectKey $key, mixed $stream, ObjectMetadata $metadata): S3Object
-    {
+    public function handle(
+        Bucket $bucket,
+        ObjectKey $key,
+        mixed $stream,
+        ObjectMetadata $metadata,
+        ?string $expectedSha256 = null,
+    ): S3Object {
         $id = (string) Str::ulid();
         $path = ObjectPathGenerator::forObject($id);
 
@@ -36,6 +45,16 @@ final class PutObject
             $this->storage->delete($path);
 
             throw new EntityTooLargeException($stored->size, $maximum);
+        }
+
+        try {
+            PayloadDigest::assertMatches($expectedSha256, $stored->sha256Hex);
+        } catch (ContentSha256MismatchException $exception) {
+            // Nothing is committed to the database yet, so discarding the file
+            // leaves no trace of the rejected body.
+            $this->storage->delete($path);
+
+            throw $exception;
         }
 
         $previousPath = null;
