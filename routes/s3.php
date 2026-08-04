@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\S3\BucketController;
+use App\Http\Controllers\S3\ObjectListController;
 use App\Http\Controllers\S3\ServiceController;
 use App\S3\Exceptions\MethodNotAllowedException;
-use App\S3\Exceptions\NotImplementedException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,7 +45,7 @@ Route::match(['GET', 'HEAD'], '/{bucket}', function (Request $request) {
 
     return match (true) {
         $request->query->has('location') => app(BucketController::class)->location($request),
-        default => throw new NotImplementedException('ListObjects'),
+        default => app(ObjectListController::class)->list($request),
     };
 });
 
