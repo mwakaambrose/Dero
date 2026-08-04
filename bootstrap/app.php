@@ -3,7 +3,9 @@
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\S3\AssignRequestId;
+use App\Http\Middleware\S3\ResolveAccessKey;
 use App\Http\Middleware\S3\ResolveVirtualHostBucket;
+use App\Http\Middleware\S3\VerifyAwsSignature;
 use App\Http\Middleware\SetTeamUrlDefaults;
 use App\S3\Exceptions\InternalErrorException;
 use App\S3\Exceptions\MethodNotAllowedException;
@@ -75,6 +77,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->group('s3', [
             AssignRequestId::class,
+            ResolveAccessKey::class,
+            VerifyAwsSignature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

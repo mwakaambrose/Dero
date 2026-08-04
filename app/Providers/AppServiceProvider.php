@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\S3\Auth\SignatureV4Verifier;
 use App\Storage\Contracts\ObjectStorageBackend;
 use App\Storage\LocalFilesystemBackend;
 use Carbon\CarbonImmutable;
@@ -18,6 +19,18 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->registerStorageBackend();
+        $this->registerSignatureVerifier();
+    }
+
+    /**
+     * Bind the AWS Signature V4 verifier with its configured tolerances.
+     */
+    protected function registerSignatureVerifier(): void
+    {
+        $this->app->singleton(SignatureV4Verifier::class, fn (): SignatureV4Verifier => new SignatureV4Verifier(
+            clockSkewSeconds: (int) config('dero.clock_skew_seconds'),
+            maxPresignedExpiry: (int) config('dero.presigned_max_expiry'),
+        ));
     }
 
     /**

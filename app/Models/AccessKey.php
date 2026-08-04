@@ -85,6 +85,18 @@ class AccessKey extends Model
     }
 
     /**
+     * Revoke this key immediately.
+     *
+     * A state transition rather than a fillable attribute: revoked_at is
+     * deliberately absent from the Fillable list, so update(['revoked_at' =>
+     * ...]) silently does nothing and would leave the credential live.
+     */
+    public function revoke(): void
+    {
+        $this->forceFill(['revoked_at' => now()])->save();
+    }
+
+    /**
      * Determine whether this key may still be used.
      */
     public function isActive(): bool
