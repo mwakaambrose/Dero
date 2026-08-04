@@ -22,6 +22,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -43,6 +44,19 @@ return Application::configure(basePath: dirname(__DIR__))
          */
         then: function (): void {
             $host = config('dero.endpoint_host');
+
+            /*
+             | The port is stripped before the host is used as a route domain.
+             |
+             | Route host matching compares against Request::getHost(), which
+             | never carries a port — so "127.0.0.1:8787" here would match
+             | nothing and every S3 request would 404 with no explanation. The
+             | configured value keeps its port for display and for the Location
+             | URLs returned by CompleteMultipartUpload.
+             */
+            if (is_string($host) && $host !== '') {
+                $host = Str::before($host, ':');
+            }
 
             // Fail closed: with no endpoint host configured the S3 API is not
             // exposed at all, rather than mounting a wildcard /{bucket}/{key}

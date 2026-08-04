@@ -15,9 +15,11 @@ use App\S3\Exceptions\AccessDeniedException;
 use App\S3\Exceptions\NoSuchKeyException;
 use App\S3\Exceptions\S3Exception;
 use App\S3\Http\ObjectMetadata;
+use App\S3\Http\ObjectResponse;
 use App\S3\Http\PayloadDigest;
 use App\S3\Http\RangeHeader;
 use App\S3\Http\RequestBodyStream;
+use App\S3\Http\StreamedObjectResponse;
 use App\S3\Values\ObjectKey;
 use App\S3\Xml\XmlReader;
 use App\S3\Xml\XmlWriter;
@@ -182,6 +184,11 @@ final class ObjectController extends Controller
         $headers['Content-Length'] = (string) $range->length();
         $headers['Content-Range'] = $range->contentRange($object->size_bytes);
 
+        // The checksum covers the whole object, so it must not travel with a
+        // partial body: boto3 validates the header against the bytes it
+        // actually received and fails every range request that carries one.
+        unset($headers['x-amz-checksum-sha256']);
+
         return $this->stream(
             fn (): mixed => $this->storage->readRange($object->storage_path, $range->start, $range->length()),
             $headers,
@@ -196,7 +203,7 @@ final class ObjectController extends Controller
     {
         $object = $this->findObject($request);
 
-        return new Response('', 200, [
+        return new ObjectResponse('', 200, [
             ...$this->responseHeaders($object),
             'Content-Length' => (string) $object->size_bytes,
         ]);
@@ -233,7 +240,10 @@ final class ObjectController extends Controller
             'ETag' => '"'.$object->etag.'"',
             'Last-Modified' => $object->last_modified->toRfc7231String(),
             'Accept-Ranges' => 'bytes',
-            'x-amz-checksum-sha256' => $object->checksum_sha256,
+            // Base64 of the raw digest, not the hex the column stores. The AWS
+            // CLI validates this header against what it computed, and a hex
+            // value fails every download with a checksum mismatch.
+            'x-amz-checksum-sha256' => $this->checksumHeader($object),
         ], static fn (?string $value): bool => $value !== null && $value !== '');
 
         foreach ($object->metadata ?? [] as $name => $value) {
@@ -241,6 +251,27 @@ final class ObjectController extends Controller
         }
 
         return $headers;
+    }
+
+    /**
+     * The x-amz-checksum-sha256 header value for a stored hex digest.
+     *
+     * Returns null for a multipart object: its stored digest is over the
+     * assembled bytes, whereas S3's composite checksum is over the parts'
+     * digests. Sending the former would fail a client's validation, so nothing
+     * is sent at all — which clients accept.
+     */
+    private function checksumHeader(S3Object $object): ?string
+    {
+        $hex = $object->checksum_sha256;
+
+        if ($object->is_multipart || $hex === null || preg_match('/^[0-9a-f]{64}$/i', $hex) !== 1) {
+            return null;
+        }
+
+        $raw = hex2bin($hex);
+
+        return $raw === false ? null : base64_encode($raw);
     }
 
     /**
@@ -257,7 +288,7 @@ final class ObjectController extends Controller
     {
         $chunkSize = max(1, (int) config('dero.stream_chunk_size'));
 
-        return new StreamedResponse(function () use ($open, $chunkSize): void {
+        return new StreamedObjectResponse(function () use ($open, $chunkSize): void {
             $stream = $open();
 
             while (! feof($stream)) {

@@ -29,3 +29,5 @@ yarn-error.log
 /.zed
 /.venv
 /storage/dero
+storage/interop
+tests/Interop/.env.interop
