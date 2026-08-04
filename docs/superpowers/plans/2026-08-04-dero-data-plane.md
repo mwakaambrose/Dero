@@ -94,7 +94,7 @@ Feature tests need a database, and `tests/Pest.php` currently has `RefreshDataba
 - Consumes: nothing.
 - Produces: a migrated in-memory database for every feature test. The request-signing helper `Tests\Helpers\SignsRequests` is created in Task 15, once there are routes for it to sign against; this task only establishes the database trait it depends on.
 
-- [ ] **Step 1: Enable RefreshDatabase for feature tests**
+- [x] **Step 1: Enable RefreshDatabase for feature tests**
 
 In `tests/Pest.php`, uncomment the trait so feature tests get a migrated in-memory database:
 
@@ -104,12 +104,12 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 ```
 
-- [ ] **Step 2: Run the existing suite to confirm nothing broke**
+- [x] **Step 2: Run the existing suite to confirm nothing broke**
 
 Run: `php artisan test --compact`
 Expected: PASS. The starter kit's tests already assume a database; enabling the trait should not break them. If any test fails, it was relying on persisted state across tests — fix that test rather than reverting this change.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -136,7 +136,7 @@ Every tunable in one place, so no magic numbers appear in later tasks.
   `stream_chunk_size`, `rate_limits.requests_per_minute`,
   `rate_limits.auth_failures_per_minute`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/ConfigTest.php`:
 
@@ -159,12 +159,12 @@ it('does not register s3 routes when no endpoint host is configured', function (
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=ConfigTest`
 Expected: FAIL — `config('dero.region')` is null because the file does not exist.
 
-- [ ] **Step 3: Create the config file**
+- [x] **Step 3: Create the config file**
 
 Create `config/dero.php`:
 
@@ -218,7 +218,7 @@ return [
 ];
 ```
 
-- [ ] **Step 4: Add the variables to `.env.example`**
+- [x] **Step 4: Add the variables to `.env.example`**
 
 Append to `.env.example`:
 
@@ -257,7 +257,7 @@ S3_RATE_LIMIT_RPM=3000
 S3_AUTH_FAILURE_LIMIT=20
 ```
 
-- [ ] **Step 5: Ignore the local storage root**
+- [x] **Step 5: Ignore the local storage root**
 
 Append to `.gitignore`:
 
@@ -265,12 +265,12 @@ Append to `.gitignore`:
 /storage/dero
 ```
 
-- [ ] **Step 6: Run the test to confirm it passes**
+- [x] **Step 6: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=ConfigTest`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -291,7 +291,7 @@ S3 bucket naming rules, enforced in one place. Getting these wrong means clients
 **Interfaces:**
 - Produces: `BucketName::fromString(string): self` (throws `InvalidBucketNameException`), `BucketName::isValid(string): bool`, public readonly `string $value`. Consumed by Tasks 12, 21, 22.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/Values/BucketNameTest.php`:
 
@@ -337,12 +337,12 @@ it('exposes validity without throwing', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=BucketNameTest`
 Expected: FAIL — `Class "App\S3\Values\BucketName" not found`.
 
-- [ ] **Step 3: Create the exception**
+- [x] **Step 3: Create the exception**
 
 Create `app/S3/Exceptions/InvalidBucketNameException.php`. This subclasses `S3Exception`, which does not exist yet — so create a minimal base now and flesh it out in Task 5.
 
@@ -417,7 +417,7 @@ final class InvalidBucketNameException extends S3Exception
 }
 ```
 
-- [ ] **Step 4: Implement the value object**
+- [x] **Step 4: Implement the value object**
 
 Create `app/S3/Values/BucketName.php`:
 
@@ -487,12 +487,12 @@ final readonly class BucketName
 }
 ```
 
-- [ ] **Step 5: Run the test to confirm it passes**
+- [x] **Step 5: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=BucketNameTest`
 Expected: PASS, 20 assertions across the datasets.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -514,7 +514,7 @@ Keys are arbitrary UTF-8 up to 1024 bytes. They are never treated as paths — b
 **Interfaces:**
 - Produces: `ObjectKey::fromString(string): self`, readonly `string $value`, `hash(): string` (32 raw bytes), `hashHex(): string`, `commonPrefix(string $prefix, string $delimiter): ?string`. Consumed by Tasks 12, 17, 20, 21.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/Values/ObjectKeyTest.php`:
 
@@ -586,12 +586,12 @@ it('returns null when no delimiter follows the prefix', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=ObjectKeyTest`
 Expected: FAIL — `Class "App\S3\Values\ObjectKey" not found`.
 
-- [ ] **Step 3: Create the exception**
+- [x] **Step 3: Create the exception**
 
 Create `app/S3/Exceptions/InvalidArgumentException.php`:
 
@@ -616,7 +616,7 @@ final class InvalidArgumentException extends S3Exception
 }
 ```
 
-- [ ] **Step 4: Implement the value object**
+- [x] **Step 4: Implement the value object**
 
 Create `app/S3/Values/ObjectKey.php`:
 
@@ -693,12 +693,12 @@ final readonly class ObjectKey
 }
 ```
 
-- [ ] **Step 5: Run the test to confirm it passes**
+- [x] **Step 5: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=ObjectKeyTest`
 Expected: PASS, 11 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -719,7 +719,7 @@ The path-traversal defence. Physical paths come from the object's ULID and nothi
 **Interfaces:**
 - Produces: `ObjectPathGenerator::forObject(string $ulid): string`, `forPart(string $uploadId, int $partNumber): string`, `forTemp(string $token): string`. Consumed by Tasks 6, 17, 24.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/Storage/ObjectPathGeneratorTest.php`:
 
@@ -776,12 +776,12 @@ it('rejects an upload id that is not alphanumeric', function () {
 })->throws(InvalidArgumentException::class);
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=ObjectPathGeneratorTest`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement the generator**
+- [x] **Step 3: Implement the generator**
 
 Create `app/Storage/ObjectPathGenerator.php`:
 
@@ -856,12 +856,12 @@ final class ObjectPathGenerator
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=ObjectPathGeneratorTest`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -885,7 +885,7 @@ Every failure on an S3 route must render as an S3 error document. A Laravel HTML
 **Interfaces:**
 - Produces: `XmlWriter::render(string $root, array $data): string`, `S3ErrorResponse::fromException(S3Exception $e, string $requestId): Response`. Consumed by Tasks 6 onward and every controller.
 
-- [ ] **Step 1: Write the failing XmlWriter test**
+- [x] **Step 1: Write the failing XmlWriter test**
 
 Create `tests/Unit/S3/Xml/XmlWriterTest.php`:
 
@@ -939,12 +939,12 @@ it('applies attributes to the root element', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=XmlWriterTest`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement XmlWriter**
+- [x] **Step 3: Implement XmlWriter**
 
 Create `app/S3/Xml/XmlWriter.php`:
 
@@ -1027,12 +1027,12 @@ final class XmlWriter
 }
 ```
 
-- [ ] **Step 4: Run the XmlWriter test**
+- [x] **Step 4: Run the XmlWriter test**
 
 Run: `php artisan test --compact --filter=XmlWriterTest`
 Expected: PASS
 
-- [ ] **Step 5: Write the failing error-response test**
+- [x] **Step 5: Write the failing error-response test**
 
 Create `tests/Unit/S3/Http/S3ErrorResponseTest.php`:
 
@@ -1080,12 +1080,12 @@ it('never leaks a secret in the rendered body', function () {
 });
 ```
 
-- [ ] **Step 6: Run it to confirm it fails**
+- [x] **Step 6: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=S3ErrorResponseTest`
 Expected: FAIL — exception classes not found.
 
-- [ ] **Step 7: Create the exception classes**
+- [x] **Step 7: Create the exception classes**
 
 Create each file in `app/S3/Exceptions/`. They all follow the same shape; here are the four the test needs, and the rest of the codes listed after.
 
@@ -1245,7 +1245,7 @@ Create the remaining codes with the same shape. Constructor arguments and contex
 
 Messages: use AWS's wording where it is well known (`"Access Denied."`, `"The specified bucket does not exist."`), otherwise a plain sentence describing the condition.
 
-- [ ] **Step 8: Implement S3ErrorResponse**
+- [x] **Step 8: Implement S3ErrorResponse**
 
 Create `app/S3/Http/S3ErrorResponse.php`:
 
@@ -1279,12 +1279,12 @@ final class S3ErrorResponse
 }
 ```
 
-- [ ] **Step 9: Run the test to confirm it passes**
+- [x] **Step 9: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=S3ErrorResponseTest`
 Expected: PASS
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -1305,7 +1305,7 @@ All nine tables in one migration, because they are mutually referential and a pa
 **Interfaces:**
 - Produces: tables `buckets`, `s3_objects`, `multipart_uploads`, `multipart_parts`, `access_keys`, `bucket_policies`, `audit_logs`, `usage_records`, `system_settings`. Consumed by Task 7 onward.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/SchemaTest.php`:
 
@@ -1336,12 +1336,12 @@ it('scopes every tenant-owned table by team', function (string $table) {
 })->with(['buckets', 's3_objects', 'multipart_uploads', 'access_keys', 'bucket_policies', 'audit_logs', 'usage_records']);
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=SchemaTest`
 Expected: FAIL — `buckets` table does not exist.
 
-- [ ] **Step 3: Create the migration**
+- [x] **Step 3: Create the migration**
 
 Create `database/migrations/2026_08_04_000001_create_dero_tables.php`:
 
@@ -1561,17 +1561,17 @@ return new class extends Migration
 };
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=SchemaTest`
 Expected: PASS
 
-- [ ] **Step 5: Verify the migration is reversible**
+- [x] **Step 5: Verify the migration is reversible**
 
 Run: `php artisan migrate:fresh --env=testing && php artisan migrate:rollback --env=testing`
 Expected: both succeed with no foreign-key errors. Order matters in `down()` — children before parents.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -1592,7 +1592,7 @@ git commit -m "feat: add dero schema migration"
 **Interfaces:**
 - Produces: `Bucket` (`team()`, `objects()`, `scopeForTeam()`), `S3Object` (`bucket()`), `AccessKey` (`team()`, `isActive()`, `allows(AccessKeyPermission, ?string $bucketName)`, `secret_key` encrypted cast), enums `BucketVisibility::{Private,PublicRead}` and `AccessKeyPermission::{Read,Write,Delete,List,Admin}`. Consumed by Tasks 12 onward.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/ModelsTest.php`:
 
@@ -1670,12 +1670,12 @@ it('treats a null bucket scope as all buckets in the team', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=ModelsTest`
 Expected: FAIL — models not found.
 
-- [ ] **Step 3: Create the enums**
+- [x] **Step 3: Create the enums**
 
 `app/Enums/BucketVisibility.php`:
 
@@ -1738,7 +1738,7 @@ enum AccessKeyPermission: string
 }
 ```
 
-- [ ] **Step 4: Create the models**
+- [x] **Step 4: Create the models**
 
 `app/Models/Bucket.php`:
 
@@ -1985,7 +1985,7 @@ class AccessKey extends Model
 
 Create `MultipartUpload`, `MultipartPart`, `BucketPolicy`, `AuditLog`, and `UsageRecord` in the same style: `HasUlids` on `MultipartUpload` only (the others use auto-increment ids), `#[Fillable]` listing every column written by application code, `casts()` returning `'metadata' => 'array'` / `'meta' => 'array'` / `'permissions' => 'array'` where the column is JSON and `'expires_at' => 'datetime'` / `'period_start' => 'datetime'` where it is a timestamp. `AuditLog` sets `public $timestamps = false;` because the table has only `created_at`.
 
-- [ ] **Step 5: Create the factories**
+- [x] **Step 5: Create the factories**
 
 `database/factories/BucketFactory.php`:
 
@@ -2091,12 +2091,12 @@ class AccessKeyFactory extends Factory
 
 `database/factories/S3ObjectFactory.php` follows the same pattern: `bucket_id` from `Bucket::factory()`, `team_id` matched to the bucket's team, `key` from `fake()->slug().'.txt'`, `key_hash` computed as `hash('sha256', $key, binary: true)`, `storage_path` from `ObjectPathGenerator::forObject()`, `size_bytes` a small integer, `etag` an MD5 of random bytes, `last_modified` `now()`.
 
-- [ ] **Step 6: Run the test to confirm it passes**
+- [x] **Step 6: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=ModelsTest`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -2120,7 +2120,7 @@ The seam that lets a future S3 or Azure backend drop in without touching a contr
 **Interfaces:**
 - Produces: the `ObjectStorageBackend` interface exactly as written below. Every later task resolves it from the container, never `LocalFilesystemBackend` directly.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/Storage/LocalFilesystemBackendTest.php`:
 
@@ -2256,12 +2256,12 @@ it('keeps memory flat while storing a large stream', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=LocalFilesystemBackendTest`
 Expected: FAIL — `ObjectStorageBackend` is not bound.
 
-- [ ] **Step 3: Create the value objects**
+- [x] **Step 3: Create the value objects**
 
 `app/Storage/Values/StoredObject.php`:
 
@@ -2303,7 +2303,7 @@ final readonly class StoredPart
 }
 ```
 
-- [ ] **Step 4: Create the contract**
+- [x] **Step 4: Create the contract**
 
 `app/Storage/Contracts/ObjectStorageBackend.php`:
 
@@ -2364,7 +2364,7 @@ interface ObjectStorageBackend
 }
 ```
 
-- [ ] **Step 5: Implement the local backend**
+- [x] **Step 5: Implement the local backend**
 
 `app/Storage/LocalFilesystemBackend.php`:
 
@@ -2604,7 +2604,7 @@ final class LocalFilesystemBackend implements ObjectStorageBackend
 }
 ```
 
-- [ ] **Step 6: Bind the contract**
+- [x] **Step 6: Bind the contract**
 
 In `app/Providers/AppServiceProvider.php`, inside `register()`:
 
@@ -2621,12 +2621,12 @@ Add the imports `use App\Storage\Contracts\ObjectStorageBackend;` and `use App\S
 > override the config must resolve the backend *after* the override — which is
 > why `beforeEach` in the test sets the config before calling `app()`.
 
-- [ ] **Step 7: Run the test to confirm it passes**
+- [x] **Step 7: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=LocalFilesystemBackendTest`
 Expected: PASS, 13 tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -2647,7 +2647,7 @@ The foundation of SigV4. If canonicalisation is wrong by one character, every si
 **Interfaces:**
 - Produces: `CanonicalRequest::uri(string $path): string`, `CanonicalRequest::queryString(array $query): string`, `CanonicalRequest::headers(array $headers, array $signedHeaders): string`, `CanonicalRequest::build(string $method, string $path, array $query, array $headers, array $signedHeaders, string $payloadHash): string`. Consumed by Tasks 10 and 11.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/Auth/CanonicalRequestTest.php`:
 
@@ -2757,12 +2757,12 @@ it('matches the AWS published get-vanilla vector', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=CanonicalRequestTest`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement it**
+- [x] **Step 3: Implement it**
 
 Create `app/S3/Auth/CanonicalRequest.php`:
 
@@ -2885,12 +2885,12 @@ final class CanonicalRequest
 > `implode("\n", …)` produces the blank line AWS requires between the canonical
 > headers and the signed-header list. Do not add another.
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=CanonicalRequestTest`
 Expected: PASS, 12 tests. If the AWS vector test fails, the bug is in `uri()` or `headers()` — do not proceed until it passes, because every later signature test depends on it.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -2914,7 +2914,7 @@ git commit -m "feat: add SigV4 canonical request construction"
   - `SignatureV4Verifier::signingKey(string $secret, string $date, string $region, string $service): string`, `stringToSign(...): string`, `sign(SignedRequest, ParsedAuthorization, string $secret): string`, `verify(SignedRequest, ParsedAuthorization, string $secret, DateTimeImmutable $now): void`.
 - Consumed by Tasks 11, 15.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/Auth/SignatureV4VerifierTest.php`:
 
@@ -3113,12 +3113,12 @@ it('skips the skew check for presigned requests, which carry their own expiry', 
 })->throwsNoExceptions();
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=SignatureV4VerifierTest`
 Expected: FAIL — classes not found.
 
-- [ ] **Step 3: Create the supporting value objects**
+- [x] **Step 3: Create the supporting value objects**
 
 `app/S3/Auth/Credential.php`:
 
@@ -3229,7 +3229,7 @@ final readonly class ParsedAuthorization
 }
 ```
 
-- [ ] **Step 4: Implement the verifier**
+- [x] **Step 4: Implement the verifier**
 
 `app/S3/Auth/SignatureV4Verifier.php`:
 
@@ -3359,12 +3359,12 @@ final class SignatureV4Verifier
 }
 ```
 
-- [ ] **Step 5: Run the test to confirm it passes**
+- [x] **Step 5: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=SignatureV4VerifierTest`
 Expected: PASS, 15 tests. The AWS signing-key vector must pass — it is the one assertion that proves the derivation matches real AWS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -3383,7 +3383,7 @@ git commit -m "feat: add SigV4 signature verification"
 **Interfaces:**
 - Produces: `AuthorizationParser::parse(Request $request): ?ParsedAuthorization` (null when the request carries no credentials at all, which is a legitimate anonymous request), `AuthorizationParser::snapshot(Request $request): SignedRequest`. Consumed by Task 15.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/Auth/AuthorizationParserTest.php`:
 
@@ -3488,12 +3488,12 @@ it('defaults a presigned request payload hash to UNSIGNED-PAYLOAD', function () 
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=AuthorizationParserTest`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement the parser**
+- [x] **Step 3: Implement the parser**
 
 Create `app/S3/Auth/AuthorizationParser.php`:
 
@@ -3637,12 +3637,12 @@ final class AuthorizationParser
 }
 ```
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=AuthorizationParserTest`
 Expected: PASS, 9 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -3663,7 +3663,7 @@ The piece most "S3-compatible" servers skip, and the reason `aws s3 cp` fails ag
 **Interfaces:**
 - Produces: `ChunkedPayloadDecoder::isChunked(string $payloadHash): bool`, `ChunkedPayloadDecoder::decodeTo(mixed $input, mixed $output, ?callable $onChunk = null): int` returning the decoded byte count. Consumed by Task 20.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Unit/S3/Http/ChunkedPayloadDecoderTest.php`:
 
@@ -3782,12 +3782,12 @@ it('keeps memory flat across a large chunked body', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=ChunkedPayloadDecoderTest`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement the decoder**
+- [x] **Step 3: Implement the decoder**
 
 Create `app/S3/Http/ChunkedPayloadDecoder.php`:
 
@@ -3925,12 +3925,12 @@ final class ChunkedPayloadDecoder
 > a valid seed signature. Implement chained verification in a later release;
 > until then this is stated as a known gap rather than left unmentioned.
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=ChunkedPayloadDecoderTest`
 Expected: PASS, 9 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -3953,7 +3953,7 @@ Registers `routes/s3.php` as a middleware group sharing nothing with `web`, and 
 **Interfaces:**
 - Produces: middleware group `s3`; every request carries `$request->attributes->get('s3.request_id')`. Consumed by Tasks 14 onward.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/RouteGroupTest.php`:
 
@@ -3993,12 +3993,12 @@ it('does not serve s3 routes on the dashboard host', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=RouteGroupTest`
 Expected: FAIL — no s3 routes registered.
 
-- [ ] **Step 3: Create the request-id middleware**
+- [x] **Step 3: Create the request-id middleware**
 
 `app/Http/Middleware/S3/AssignRequestId.php`:
 
@@ -4032,7 +4032,7 @@ final class AssignRequestId
 }
 ```
 
-- [ ] **Step 4: Create the route file**
+- [x] **Step 4: Create the route file**
 
 `routes/s3.php` — the operations are filled in by later tasks. For now, register the fallback so unknown routes still produce S3 XML:
 
@@ -4057,7 +4057,7 @@ Route::fallback(function () {
 });
 ```
 
-- [ ] **Step 5: Register the group in `bootstrap/app.php`**
+- [x] **Step 5: Register the group in `bootstrap/app.php`**
 
 Inside `withRouting`, add a `then` callback that registers the S3 routes on their own domain and group:
 
@@ -4126,7 +4126,7 @@ Add the imports: `App\Http\Middleware\S3\AssignRequestId`, `App\S3\Exceptions\{I
 > dashboard request inside the exception handler. Checking the host would break
 > in tests; checking the attribute is exact.
 
-- [ ] **Step 5b: Configure the test host**
+- [x] **Step 5b: Configure the test host**
 
 Add to `phpunit.xml`, inside `<php>`:
 
@@ -4134,17 +4134,17 @@ Add to `phpunit.xml`, inside `<php>`:
 <env name="S3_ENDPOINT_HOST" value="s3.dero.test"/>
 ```
 
-- [ ] **Step 6: Run the test to confirm it passes**
+- [x] **Step 6: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=RouteGroupTest`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 7: Run the whole suite**
+- [x] **Step 7: Run the whole suite**
 
 Run: `php artisan test --compact`
 Expected: PASS. Confirms the new route group has not disturbed dashboard routing.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -4166,7 +4166,7 @@ Clients disagree about addressing style. AWS CLI v2 prefers `bucket.s3.example.c
 **Interfaces:**
 - Produces: `$request->attributes->get('s3.signed_request')` — the `SignedRequest` snapshot taken *before* rewriting — and a rewritten path-style request for routing. Consumed by Task 15.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/VirtualHostTest.php`:
 
@@ -4241,12 +4241,12 @@ it('ignores a subdomain that is not a valid bucket name', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=VirtualHostTest`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement the middleware**
+- [x] **Step 3: Implement the middleware**
 
 `app/Http/Middleware/S3/ResolveVirtualHostBucket.php`:
 
@@ -4330,7 +4330,7 @@ final class ResolveVirtualHostBucket
 > consuming the input stream a second time. Re-initialising with `php://input`
 > would leave an empty body for upload requests.
 
-- [ ] **Step 4: Add it to the group**
+- [x] **Step 4: Add it to the group**
 
 In `bootstrap/app.php`, the `s3` group becomes:
 
@@ -4341,12 +4341,12 @@ $middleware->group('s3', [
 ]);
 ```
 
-- [ ] **Step 5: Run the test to confirm it passes**
+- [x] **Step 5: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=VirtualHostTest`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -4367,7 +4367,7 @@ git commit -m "feat: support virtual-host and path-style S3 addressing"
 **Interfaces:**
 - Produces: `$request->attributes->get('s3.access_key')` — an `AccessKey` or null for anonymous. Consumed by Tasks 16 onward.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/AuthenticationTest.php`. It needs the signing helper, so write that first as `tests/Helpers/SignsRequests.php`:
 
@@ -4549,12 +4549,12 @@ it('never writes a secret to the log', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=AuthenticationTest`
 Expected: FAIL — no authentication middleware, so signed requests are not accepted.
 
-- [ ] **Step 3: Bind the verifier**
+- [x] **Step 3: Bind the verifier**
 
 In `AppServiceProvider::register()`:
 
@@ -4565,7 +4565,7 @@ $this->app->singleton(SignatureV4Verifier::class, fn () => new SignatureV4Verifi
 ));
 ```
 
-- [ ] **Step 4: Implement ResolveAccessKey**
+- [x] **Step 4: Implement ResolveAccessKey**
 
 `app/Http/Middleware/S3/ResolveAccessKey.php`:
 
@@ -4616,7 +4616,7 @@ final class ResolveAccessKey
 }
 ```
 
-- [ ] **Step 5: Implement VerifyAwsSignature**
+- [x] **Step 5: Implement VerifyAwsSignature**
 
 `app/Http/Middleware/S3/VerifyAwsSignature.php`:
 
@@ -4671,7 +4671,7 @@ final class VerifyAwsSignature
 }
 ```
 
-- [ ] **Step 6: Add both to the group**
+- [x] **Step 6: Add both to the group**
 
 ```php
 $middleware->group('s3', [
@@ -4682,7 +4682,7 @@ $middleware->group('s3', [
 ]);
 ```
 
-- [ ] **Step 7: Add a temporary service route so the test has something to hit**
+- [x] **Step 7: Add a temporary service route so the test has something to hit**
 
 In `routes/s3.php`, above the fallback:
 
@@ -4694,12 +4694,12 @@ Route::get('/', fn () => response('<?xml version="1.0" encoding="UTF-8"?><ListAl
 
 This is replaced properly in Task 17.
 
-- [ ] **Step 8: Run the test to confirm it passes**
+- [x] **Step 8: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=AuthenticationTest`
 Expected: PASS, 9 tests.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -4720,7 +4720,7 @@ git commit -m "feat: authenticate S3 requests with SigV4"
 **Interfaces:**
 - Produces: `$request->attributes->get('s3.bucket')` (a `Bucket` or null for service-level operations); `OperationPermission::forRequest(Request): AccessKeyPermission`. Consumed by every controller.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/AuthorizationTest.php`:
 
@@ -4806,12 +4806,12 @@ it('still denies an anonymous write against a public-read bucket', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=AuthorizationTest`
 Expected: FAIL — bucket routes do not exist.
 
-- [ ] **Step 3: Map operations to permissions**
+- [x] **Step 3: Map operations to permissions**
 
 `app/S3/Authorization/OperationPermission.php`:
 
@@ -4851,7 +4851,7 @@ final class OperationPermission
 }
 ```
 
-- [ ] **Step 4: Implement ResolveBucket**
+- [x] **Step 4: Implement ResolveBucket**
 
 `app/Http/Middleware/S3/ResolveBucket.php`:
 
@@ -4901,7 +4901,7 @@ final class ResolveBucket
 }
 ```
 
-- [ ] **Step 5: Implement AuthorizeS3Operation**
+- [x] **Step 5: Implement AuthorizeS3Operation**
 
 `app/Http/Middleware/S3/AuthorizeS3Operation.php`:
 
@@ -4967,7 +4967,7 @@ final class AuthorizeS3Operation
 }
 ```
 
-- [ ] **Step 6: Complete the middleware group**
+- [x] **Step 6: Complete the middleware group**
 
 ```php
 $middleware->group('s3', [
@@ -4985,7 +4985,7 @@ $middleware->group('s3', [
 > pipeline, so this holds — but if these are ever moved to global middleware,
 > `route()` returns null and bucket resolution silently stops working.
 
-- [ ] **Step 7: Add a temporary bucket route**
+- [x] **Step 7: Add a temporary bucket route**
 
 In `routes/s3.php`, above the fallback:
 
@@ -4995,12 +4995,12 @@ Route::match(['GET', 'HEAD', 'PUT', 'DELETE'], '/{bucket}', fn () => response(''
 
 Replaced properly in Task 18.
 
-- [ ] **Step 8: Run the test to confirm it passes**
+- [x] **Step 8: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=AuthorizationTest`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -5022,7 +5022,7 @@ git commit -m "feat: resolve buckets and authorize S3 operations with tenant iso
 **Interfaces:**
 - Produces: routes `GET /`, `PUT /{bucket}`, `DELETE /{bucket}`, `HEAD /{bucket}`, `GET /{bucket}?location`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/BucketOperationsTest.php`:
 
@@ -5152,12 +5152,12 @@ it('returns the configured region for GetBucketLocation', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=BucketOperationsTest`
 Expected: FAIL — the temporary stub routes return empty 200s.
 
-- [ ] **Step 3: Implement ServiceController**
+- [x] **Step 3: Implement ServiceController**
 
 `app/Http/Controllers/S3/ServiceController.php`:
 
@@ -5214,7 +5214,7 @@ final class ServiceController extends Controller
 }
 ```
 
-- [ ] **Step 4: Implement BucketController**
+- [x] **Step 4: Implement BucketController**
 
 `app/Http/Controllers/S3/BucketController.php`:
 
@@ -5320,7 +5320,7 @@ final class BucketController extends Controller
 }
 ```
 
-- [ ] **Step 5: Wire the routes**
+- [x] **Step 5: Wire the routes**
 
 Replace the stub routes in `routes/s3.php`:
 
@@ -5355,12 +5355,12 @@ Route::fallback(function () {
 
 `ObjectListController` arrives in Task 18; until then, point the `default` arm at a closure returning an empty `ListBucketResult`.
 
-- [ ] **Step 6: Run the test to confirm it passes**
+- [x] **Step 6: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=BucketOperationsTest`
 Expected: PASS, 11 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -5384,7 +5384,7 @@ The operation clients lean on hardest, and the one where ordering and pagination
   `ListObjectsQuery` readonly: `prefix`, `delimiter`, `maxKeys`, `continuationToken`, `startAfter`, `encodingType`.
   `ListObjectsResult` readonly: `objects` (array of `S3Object`), `commonPrefixes` (array of string), `isTruncated` (bool), `nextContinuationToken` (?string).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/ListObjectsTest.php`:
 
@@ -5581,12 +5581,12 @@ it('never lists objects from another bucket', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=ListObjectsTest`
 Expected: FAIL.
 
-- [ ] **Step 3: Create the query and result value objects**
+- [x] **Step 3: Create the query and result value objects**
 
 `app/S3/Values/ListObjectsQuery.php`:
 
@@ -5670,7 +5670,7 @@ final readonly class ListObjectsResult
 }
 ```
 
-- [ ] **Step 4: Implement the listing action**
+- [x] **Step 4: Implement the listing action**
 
 `app/Actions/S3/ListObjects.php`:
 
@@ -5769,7 +5769,7 @@ final class ListObjects
 > can add a materialised prefix table. Do not optimise it now — correctness of
 > pagination is the thing that must not be got wrong.
 
-- [ ] **Step 5: Implement the controller**
+- [x] **Step 5: Implement the controller**
 
 `app/Http/Controllers/S3/ObjectListController.php` renders the result. `Contents` entries carry `Key`, `LastModified` (`toIso8601ZuluString()`), `ETag` (wrapped in literal `"` quotes), `Size`, and `StorageClass` (`STANDARD`). The root element carries `Name`, `Prefix`, `KeyCount`, `MaxKeys`, `Delimiter` (omitted when empty), `IsTruncated`, `NextContinuationToken` (omitted when null), `EncodingType` (omitted when null), and `xmlns="http://s3.amazonaws.com/doc/2006-03-01/"`. When `encoding-type=url`, `Key`, `Prefix`, `Delimiter`, and `StartAfter` are `rawurlencode`d.
 
@@ -5829,16 +5829,16 @@ final class ObjectListController extends Controller
 }
 ```
 
-- [ ] **Step 6: Point the bucket GET route at it**
+- [x] **Step 6: Point the bucket GET route at it**
 
 In `routes/s3.php`, the `default` arm of the `GET /{bucket}` match now calls `app(ObjectListController::class)->list($request)`. Add the import.
 
-- [ ] **Step 7: Run the test to confirm it passes**
+- [x] **Step 7: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=ListObjectsTest`
 Expected: PASS, 13 tests. The full-pagination test is the important one — it is what proves the continuation token neither skips nor repeats.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -5861,7 +5861,7 @@ git commit -m "feat: implement ListObjectsV2 with prefix, delimiter and paginati
   `ObjectMetadata::fromRequest(Request): self` readonly with `contentType`, `contentEncoding`, `contentDisposition`, `cacheControl`, `expires`, `userMetadata` (array).
   `RequestBodyStream::open(Request): mixed` returning a decoded body stream.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/PutObjectTest.php`:
 
@@ -6040,12 +6040,12 @@ it('rejects a body larger than the configured maximum', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=PutObjectTest`
 Expected: FAIL — no object routes.
 
-- [ ] **Step 3: Implement the metadata value object**
+- [x] **Step 3: Implement the metadata value object**
 
 `app/S3/Http/ObjectMetadata.php`:
 
@@ -6110,7 +6110,7 @@ final readonly class ObjectMetadata
 }
 ```
 
-- [ ] **Step 4: Implement the body stream**
+- [x] **Step 4: Implement the body stream**
 
 `app/S3/Http/RequestBodyStream.php`:
 
@@ -6161,7 +6161,7 @@ final class RequestBodyStream
 }
 ```
 
-- [ ] **Step 5: Implement the action**
+- [x] **Step 5: Implement the action**
 
 `app/Actions/S3/PutObject.php`:
 
@@ -6264,7 +6264,7 @@ final class PutObject
 }
 ```
 
-- [ ] **Step 6: Implement the controller action and route**
+- [x] **Step 6: Implement the controller action and route**
 
 Add `put()` to `app/Http/Controllers/S3/ObjectController.php`:
 
@@ -6302,12 +6302,12 @@ Route::put('/{bucket}/{key}', [ObjectController::class, 'put'])->where('key', '.
 > `where('key', '.*')` is required: without it Laravel stops the parameter at
 > the first slash and `photos/2026/q1.pdf` never routes.
 
-- [ ] **Step 7: Run the test to confirm it passes**
+- [x] **Step 7: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=PutObjectTest`
 Expected: PASS, 14 tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -6328,7 +6328,7 @@ git commit -m "feat: implement streaming PutObject with aws-chunked support"
 **Interfaces:**
 - Produces: `RangeHeader::parse(?string $header, int $size): ?RangeHeader` with readonly `start`, `end`, `length`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/GetObjectTest.php`. It reuses `putObject()` from Task 19 — copy that helper into this file (Pest helper functions are file-scoped):
 
@@ -6486,12 +6486,12 @@ it('streams without buffering the object in memory', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=GetObjectTest`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement RangeHeader**
+- [x] **Step 3: Implement RangeHeader**
 
 `app/S3/Http/RangeHeader.php`:
 
@@ -6577,7 +6577,7 @@ final readonly class RangeHeader
 }
 ```
 
-- [ ] **Step 4: Implement get and head**
+- [x] **Step 4: Implement get and head**
 
 Add to `ObjectController`:
 
@@ -6689,19 +6689,19 @@ private function stream(callable $open, array $headers, int $status): StreamedRe
 
 Inject `ObjectStorageBackend $storage` into the constructor alongside `PutObject $putObject`.
 
-- [ ] **Step 5: Register the routes**
+- [x] **Step 5: Register the routes**
 
 ```php
 Route::get('/{bucket}/{key}', [ObjectController::class, 'get'])->where('key', '.*');
 Route::match(['HEAD'], '/{bucket}/{key}', [ObjectController::class, 'head'])->where('key', '.*');
 ```
 
-- [ ] **Step 6: Run the test to confirm it passes**
+- [x] **Step 6: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=GetObjectTest`
 Expected: PASS, 12 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -6722,7 +6722,7 @@ git commit -m "feat: implement streaming GetObject, HeadObject and range request
 **Interfaces:**
 - Produces: `DeleteObject::handle(Bucket $bucket, ObjectKey $key): bool`, `CopyObject::handle(S3Object $source, Bucket $destinationBucket, ObjectKey $destinationKey, ?ObjectMetadata $metadata): S3Object`, `XmlReader::parse(string $xml): array`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/Feature/S3/DeleteObjectTest.php` covers: deleting an existing object returns 204 and removes both the row and the stored bytes; deleting a missing key also returns 204 (S3 delete is idempotent and must not 404); bucket counters decrease; `POST /{bucket}?delete` with a `<Delete><Object><Key>…</Key></Object></Delete>` body deletes each listed key and returns a `DeleteResult` naming each `<Deleted>`; a key the caller may not delete appears under `<Error>` rather than failing the whole batch; and a malformed body returns `MalformedXML`.
 
@@ -6756,12 +6756,12 @@ it('decrements the bucket counters', function () {
 
 `tests/Feature/S3/CopyObjectTest.php` covers: `PUT /{bucket}/{key}` with `x-amz-copy-source: /source-bucket/source-key` duplicates the object and returns a `CopyObjectResult` carrying `ETag` and `LastModified`; the copy carries the source's metadata by default; `x-amz-metadata-directive: REPLACE` substitutes the request's metadata instead; copying from a bucket in another team is denied; copying a missing source reports `NoSuchKey`; and copying onto itself without `REPLACE` is rejected with `InvalidRequest`, matching AWS.
 
-- [ ] **Step 2: Run them to confirm they fail**
+- [x] **Step 2: Run them to confirm they fail**
 
 Run: `php artisan test --compact --filter="DeleteObjectTest|CopyObjectTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement XmlReader with entity expansion disabled**
+- [x] **Step 3: Implement XmlReader with entity expansion disabled**
 
 `app/S3/Xml/XmlReader.php`:
 
@@ -6813,7 +6813,7 @@ final class XmlReader
 > Verify with a test that a body containing a `<!DOCTYPE … ENTITY …>` declaration
 > does **not** expand the entity. That test belongs in Task 26's security suite.
 
-- [ ] **Step 4: Implement the actions and controller methods**
+- [x] **Step 4: Implement the actions and controller methods**
 
 `app/Actions/S3/DeleteObject.php`:
 
@@ -6875,7 +6875,7 @@ final class DeleteObject
 
 Controller: `delete()` returns `new Response('', 204)` unconditionally. `deleteMultiple()` parses the body with `XmlReader`, deletes each key, and renders a `DeleteResult`. `put()` gains a branch at the top — when `x-amz-copy-source` is present it delegates to `CopyObject` and renders `CopyObjectResult` instead of consuming a request body.
 
-- [ ] **Step 5: Register the routes**
+- [x] **Step 5: Register the routes**
 
 ```php
 Route::delete('/{bucket}/{key}', [ObjectController::class, 'delete'])->where('key', '.*');
@@ -6884,12 +6884,12 @@ Route::post('/{bucket}', [ObjectController::class, 'deleteMultiple']);
 
 The `POST /{bucket}` route must check for the `delete` query parameter and throw `NotImplementedException` otherwise, so a POST for an unimplemented sub-resource reports correctly rather than silently deleting nothing.
 
-- [ ] **Step 6: Run the tests to confirm they pass**
+- [x] **Step 6: Run the tests to confirm they pass**
 
 Run: `php artisan test --compact --filter="DeleteObjectTest|CopyObjectTest"`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -6910,7 +6910,7 @@ git commit -m "feat: implement DeleteObject, DeleteObjects and CopyObject"
 **Interfaces:**
 - Produces: `CompleteMultipartUpload::handle(MultipartUpload $upload, array $parts): S3Object` where `$parts` is `array<int, array{PartNumber: int, ETag: string}>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/MultipartUploadTest.php`. It must cover:
 
@@ -7058,12 +7058,12 @@ it('denies completing an upload belonging to another team', function () {
 
 Write the `createUpload`, `uploadPart`, `completeUpload`, `listParts`, and `abortUpload` helpers at the top of the file, each signing via `SignsRequests` exactly as the earlier tests do. `createUpload` issues `POST /photos/{key}?uploads` and returns the `UploadId` from the response XML. `uploadPart` issues `PUT /photos/{key}?partNumber=N&uploadId=…` and returns the `ETag` header stripped of quotes. `completeUpload` issues `POST /photos/{key}?uploadId=…` with a `<CompleteMultipartUpload>` body.
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=MultipartUploadTest`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement CompleteMultipartUpload**
+- [x] **Step 3: Implement CompleteMultipartUpload**
 
 This is the task's substance; the other three actions are straightforward.
 
@@ -7214,7 +7214,7 @@ final class CompleteMultipartUpload
 }
 ```
 
-- [ ] **Step 4: Implement the other three actions and the controller**
+- [x] **Step 4: Implement the other three actions and the controller**
 
 `CreateMultipartUpload::handle(Bucket $bucket, ObjectKey $key, ObjectMetadata $metadata, ?AccessKey $accessKey): MultipartUpload` creates the row with `expires_at` set to `now()->addSeconds(config('dero.multipart.abandon_after'))`.
 
@@ -7239,7 +7239,7 @@ return MultipartPart::updateOrCreate(
 
 `MultipartController` renders `InitiateMultipartUploadResult` (Bucket, Key, UploadId), `CompleteMultipartUploadResult` (Location, Bucket, Key, ETag), and `ListPartsResult` (Bucket, Key, UploadId, repeated `Part` with PartNumber, LastModified, ETag, Size). Every method resolves the upload by id **and** asserts `team_id` matches the caller's, throwing `NoSuchUploadException` when absent and `AccessDeniedException` on mismatch.
 
-- [ ] **Step 5: Register the routes**
+- [x] **Step 5: Register the routes**
 
 These must be declared **before** the plain object routes from Tasks 19–21, because they are distinguished only by query parameters:
 
@@ -7263,12 +7263,12 @@ Route::delete('/{bucket}/{key}', function (Request $request, string $bucket, str
 
 `PUT /{bucket}/{key}` gains the same treatment: when `partNumber` and `uploadId` are both present it routes to `MultipartController::uploadPart`, otherwise to `ObjectController::put`. `GET /{bucket}/{key}` routes to `listParts` when `uploadId` is present.
 
-- [ ] **Step 6: Run the test to confirm it passes**
+- [x] **Step 6: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=MultipartUploadTest`
 Expected: PASS, 12 tests. The ETag test is the one that proves AWS compatibility.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -7290,7 +7290,7 @@ The three remaining operations from spec A §9. They are grouped because each is
 **Interfaces:**
 - Produces: `ObjectListController::listV1(Request): Response`, `MultipartController::listUploads(Request): Response`, `CopyObject::handlePart(S3Object $source, MultipartUpload $upload, int $partNumber, ?RangeHeader $range): MultipartPart`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```php
 // LegacyListTest — GET /{bucket} with no list-type parameter.
@@ -7370,12 +7370,12 @@ it('denies copying a part from another team\'s bucket', function () {
 });
 ```
 
-- [ ] **Step 2: Run them to confirm they fail**
+- [x] **Step 2: Run them to confirm they fail**
 
 Run: `php artisan test --compact --filter="LegacyListTest|ListMultipartUploadsTest|UploadPartCopyTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement ListObjects v1**
+- [x] **Step 3: Implement ListObjects v1**
 
 `listV1()` reuses `ListObjects` unchanged — the only differences are at the XML boundary. Build a `ListObjectsQuery` whose `startAfter` comes from the `marker` parameter, then render `Marker` (echoed, empty string when absent) and `NextMarker` (the last key returned, only when truncated) in place of `ContinuationToken` / `NextContinuationToken`.
 
@@ -7383,26 +7383,26 @@ Expected: FAIL.
 > send it. A bucket that appears empty in one client and full in another is
 > almost always this.
 
-- [ ] **Step 4: Implement ListMultipartUploads**
+- [x] **Step 4: Implement ListMultipartUploads**
 
 `GET /{bucket}?uploads` selects `MultipartUpload` rows for the bucket, ordered by `key` then `created_at`, and renders `ListMultipartUploadsResult` with repeated `Upload` elements carrying `Key`, `UploadId`, `Initiated`, and `StorageClass`. The query filters on `bucket_id`, which is already tenant-scoped by `ResolveBucket` plus `AuthorizeS3Operation`.
 
-- [ ] **Step 5: Implement UploadPartCopy**
+- [x] **Step 5: Implement UploadPartCopy**
 
 `CopyObject::handlePart` resolves the source exactly as `CopyObject::handle` does — including the tenant check, which is why it lives on the same class rather than being duplicated. With no `x-amz-copy-source-range` it calls `$storage->copy()` straight into the part path; with a range it opens `$storage->readRange()` and streams that into `$storage->putPart()`. It returns a `MultipartPart` written with the same dual-digest treatment as Task 22's `UploadPart`, so completion computes the correct multipart ETag.
 
 Rendered as `<CopyPartResult><ETag>…</ETag><LastModified>…</LastModified></CopyPartResult>`.
 
-- [ ] **Step 6: Register the routes**
+- [x] **Step 6: Register the routes**
 
 Add `uploads` to the `GET /{bucket}` match arm (routing to `listUploads`), make the `default` arm branch on `list-type=2` versus v1, and extend the `PUT /{bucket}/{key}` branch so a request carrying both `partNumber` and `x-amz-copy-source` routes to `uploadPartCopy`.
 
-- [ ] **Step 7: Run the tests to confirm they pass**
+- [x] **Step 7: Run the tests to confirm they pass**
 
 Run: `php artisan test --compact --filter="LegacyListTest|ListMultipartUploadsTest|UploadPartCopyTest"`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -7422,7 +7422,7 @@ git commit -m "feat: implement ListObjects v1, ListMultipartUploads and UploadPa
 **Interfaces:**
 - Produces: `CorsRule` readonly with `allowedOrigins`, `allowedMethods`, `allowedHeaders`, `exposeHeaders`, `maxAgeSeconds`; `CorsRule::matches(string $origin, string $method): bool`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Feature/S3/CorsTest.php` covering: `PUT /{bucket}?cors` stores rules from a `<CORSConfiguration>` body; `GET /{bucket}?cors` returns them; `DELETE /{bucket}?cors` removes them; an `OPTIONS` preflight from an allowed origin returns 200 with `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, and `Access-Control-Max-Age`; a preflight from a disallowed origin returns 403; a wildcard origin rule matches any origin; and a normal `GET` with an `Origin` header carries `Access-Control-Allow-Origin` and any configured `Access-Control-Expose-Headers`.
 
@@ -7461,12 +7461,12 @@ it('does not add CORS headers when the bucket has no rules', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=CorsTest`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `CorsRule`, the middleware, and the controller**
+- [x] **Step 3: Implement `CorsRule`, the middleware, and the controller**
 
 `HandleBucketCors` runs **after** `ResolveBucket` but must short-circuit `OPTIONS` before `AuthorizeS3Operation`, because a preflight carries no credentials by design. Add it to the group between the two, and have `AuthorizeS3Operation` return early for `OPTIONS`.
 
@@ -7474,7 +7474,7 @@ The middleware: on `OPTIONS`, find the first matching rule and return 200 with t
 
 `BucketCorsController` uses `XmlReader` for `PUT` and `XmlWriter` for `GET`, persisting to `buckets.cors_rules`.
 
-- [ ] **Step 4: Register the routes**
+- [x] **Step 4: Register the routes**
 
 Add `cors` to the `GET /{bucket}` match arm, and:
 
@@ -7486,12 +7486,12 @@ Route::options('/{bucket}', fn () => response('', 200));
 
 The `OPTIONS` routes exist only so routing resolves; the middleware produces the actual response.
 
-- [ ] **Step 5: Run the test to confirm it passes**
+- [x] **Step 5: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=CorsTest`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -7512,7 +7512,7 @@ git commit -m "feat: implement bucket CORS configuration and preflight handling"
 **Interfaces:**
 - Produces: `audit_logs` and `usage_records` rows written after the response is sent.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/Feature/S3/RateLimitTest.php`:
 
@@ -7604,18 +7604,18 @@ it('records download bytes separately from upload bytes', function () {
 });
 ```
 
-- [ ] **Step 2: Run them to confirm they fail**
+- [x] **Step 2: Run them to confirm they fail**
 
 Run: `php artisan test --compact --filter="RateLimitTest|ActivityLogTest"`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `EnforceRateLimits`**
+- [x] **Step 3: Implement `EnforceRateLimits`**
 
 Uses Laravel's `RateLimiter`. Two keys: `s3:key:{access_key_id}` at `requests_per_minute`, and `s3:auth-fail:{ip}` at `auth_failures_per_minute`, the latter incremented only when the request throws an authentication exception. Both throw `SlowDownException`; the exception handler adds `Retry-After` from the limiter's `availableIn()`.
 
 Placed **first** in the group after `AssignRequestId`, so a flood is rejected before any database work happens.
 
-- [ ] **Step 4: Implement `RecordS3Activity`**
+- [x] **Step 4: Implement `RecordS3Activity`**
 
 A terminable middleware. `handle()` records the start time and passes through; `terminate()` writes the `audit_logs` row and increments the `usage_records` row for the current hour, using `updateOrCreate` plus atomic increments so concurrent requests do not lose counts.
 
@@ -7625,7 +7625,7 @@ The action name is derived from the resolved route and query parameters (`PutObj
 > add latency to a 1 GB download. This is why activity logging is not simply done
 > in the controller.
 
-- [ ] **Step 5: Add both to the group in order**
+- [x] **Step 5: Add both to the group in order**
 
 ```php
 $middleware->group('s3', [
@@ -7641,12 +7641,12 @@ $middleware->group('s3', [
 ]);
 ```
 
-- [ ] **Step 6: Run the tests to confirm they pass**
+- [x] **Step 6: Run the tests to confirm they pass**
 
 Run: `php artisan test --compact --filter="RateLimitTest|ActivityLogTest"`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -7663,7 +7663,7 @@ git commit -m "feat: add S3 rate limiting, audit logging and usage recording"
 - Modify: `routes/console.php`
 - Test: `tests/Feature/S3/MaintenanceTest.php`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 it('aborts multipart uploads past their expiry and reclaims their parts', function () {
@@ -7689,12 +7689,12 @@ it('removes temp files older than a day', function () {
 });
 ```
 
-- [ ] **Step 2: Run it to confirm it fails**
+- [x] **Step 2: Run it to confirm it fails**
 
 Run: `php artisan test --compact --filter=MaintenanceTest`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement the jobs and schedule them**
+- [x] **Step 3: Implement the jobs and schedule them**
 
 In `routes/console.php`:
 
@@ -7705,12 +7705,12 @@ Schedule::job(new SweepOrphanedTempFiles())->daily();
 
 Add a `MultipartUploadFactory` so the test can create uploads.
 
-- [ ] **Step 4: Run the test to confirm it passes**
+- [x] **Step 4: Run the test to confirm it passes**
 
 Run: `php artisan test --compact --filter=MaintenanceTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 vendor/bin/pint --dirty --format agent
@@ -7727,7 +7727,7 @@ No new production code unless a test finds a hole. This task exists to prove the
 **Files:**
 - Create: `tests/Feature/S3/Security/AttackSurfaceTest.php`
 
-- [ ] **Step 1: Write the tests**
+- [x] **Step 1: Write the tests**
 
 ```php
 it('stores a traversal key as data and never writes outside the storage root', function () {
@@ -7818,12 +7818,12 @@ it('never renders an HTML error page on an s3 route', function () {
 
 `presign()` builds a presigned URL with the query-parameter signing scheme, mirroring what `aws s3 presign` produces.
 
-- [ ] **Step 2: Run them**
+- [x] **Step 2: Run them**
 
 Run: `php artisan test --compact --filter=AttackSurfaceTest`
 Expected: PASS. **Any failure here is a real vulnerability** — fix the production code, never the test.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/Feature/S3/Security
@@ -7842,15 +7842,15 @@ The acceptance gate. Real clients, real HTTP. Everything before this proves Dero
 
 **Prerequisites (already installed):** `aws-cli/2.36.15`, `boto3 1.43.63` in `.venv`.
 
-- [ ] **Step 1: Add the seeding command**
+- [x] **Step 1: Add the seeding command**
 
 `php artisan dero:seed-interop` creates a team, a user, an access key with known credentials, and prints them as shell exports. It must refuse to run when `APP_ENV=production`.
 
-- [ ] **Step 2: Write the server script**
+- [x] **Step 2: Write the server script**
 
 `tests/Interop/serve.sh` starts `php artisan serve --host=127.0.0.1 --port=8787` against a scratch SQLite database and a scratch storage root, runs migrations, seeds interop credentials, and writes the endpoint to `tests/Interop/.env.interop`. Because the S3 API is host-scoped, it sets `S3_ENDPOINT_HOST=127.0.0.1:8787` so path-style requests to the serve host route correctly.
 
-- [ ] **Step 3: Write the AWS CLI script**
+- [x] **Step 3: Write the AWS CLI script**
 
 `tests/Interop/aws-cli.sh` — `set -euo pipefail`, and every command's output captured and asserted:
 
@@ -7889,11 +7889,11 @@ aws s3 rm s3://interop/test.txt --endpoint-url "$ENDPOINT"
 aws s3 rb s3://interop --force --endpoint-url "$ENDPOINT"
 ```
 
-- [ ] **Step 4: Write the boto3 tests**
+- [x] **Step 4: Write the boto3 tests**
 
 `tests/Interop/test_boto3.py` — pytest against the same endpoint, with `config=Config(s3={'addressing_style': 'path'})`. Covers `create_bucket`, `put_object`, `get_object`, `head_object`, the `list_objects_v2` paginator across more than one page, `upload_file` on a 100 MB file (automatic multipart), `generate_presigned_url` fetched with plain `urllib`, `copy_object`, `delete_objects`, and `get_object` with a `Range`. Each assertion compares bytes or checksums, never just a status code.
 
-- [ ] **Step 5: Run the full suite**
+- [x] **Step 5: Run the full suite**
 
 ```bash
 tests/Interop/serve.sh &
@@ -7909,7 +7909,7 @@ Expected: every command succeeds. **Capture the actual output** — it is the ev
 > canonical query encoding (Task 9), and `Content-Length` on streamed responses
 > (Task 20). Fix the production code; do not weaken the script to pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/Interop app/Console/Commands
@@ -7923,7 +7923,7 @@ git commit -m "test: add AWS CLI and boto3 interoperability suite"
 **Files:**
 - Create: `tests/Interop/benchmark.sh`, `tests/Feature/S3/MemoryProfileTest.php`
 
-- [ ] **Step 1: Write the memory test**
+- [x] **Step 1: Write the memory test**
 
 ```php
 it('keeps peak memory flat as object size grows', function (int $megabytes) {
@@ -7942,22 +7942,22 @@ it('keeps peak memory flat as object size grows', function (int $megabytes) {
 })->with([1, 16, 64, 128]);
 ```
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 Run: `php artisan test --compact --filter=MemoryProfileTest`
 Expected: PASS at every size. A failure at 128 MB but not 1 MB means something buffers the body.
 
-- [ ] **Step 3: Write the benchmark script**
+- [x] **Step 3: Write the benchmark script**
 
 `tests/Interop/benchmark.sh` times upload and download of 1 KB, 1 MB, 100 MB, and 1 GB objects through the AWS CLI, reporting elapsed time and throughput per size, and runs 20 concurrent 1 MB uploads to check the server stays responsive.
 
-- [ ] **Step 4: Run it and record the numbers**
+- [x] **Step 4: Run it and record the numbers**
 
 Run: `tests/Interop/benchmark.sh | tee tests/Interop/benchmark-results.txt`
 
 The recorded figures go into the final report. Report what was measured, on what hardware — no extrapolation.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests
@@ -7974,7 +7974,7 @@ The document that determines whether developers trust this project.
 - Create: `docs/s3-compatibility.md`, `docs/architecture.md`
 - Modify: `README.md`
 
-- [ ] **Step 1: Write the compatibility matrix**
+- [x] **Step 1: Write the compatibility matrix**
 
 `docs/s3-compatibility.md` with a three-column table (Operation · Supported · Notes). Rules, applied without exception:
 
@@ -7988,19 +7988,19 @@ The document that determines whether developers trust this project.
 - A "Verified with" section naming the exact client versions: `aws-cli/2.36.15`, `boto3 1.43.63`.
 - **No claim of full S3 compatibility anywhere in the document.**
 
-- [ ] **Step 2: Write the architecture document**
+- [x] **Step 2: Write the architecture document**
 
 `docs/architecture.md`: the layer diagram, the request path through the middleware chain, the storage abstraction and why physical paths derive from ULIDs, the schema with the two MySQL constraints from spec A §5.2, the SigV4 flow, and the `APP_KEY` limitation from spec A §7.4 stated plainly.
 
-- [ ] **Step 3: Update the README**
+- [x] **Step 3: Update the README**
 
 Replace the starter kit's README with Dero's: what it is, the granary the name comes from, quick start, connecting a client, and links into `docs/`.
 
-- [ ] **Step 4: Verify every claim**
+- [x] **Step 4: Verify every claim**
 
 Re-read the matrix against the Task 27 output. Any row marked Supported without corresponding evidence must be downgraded to "Untested" — that is the whole point of the document.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs README.md
@@ -8011,7 +8011,7 @@ git commit -m "docs: add S3 compatibility matrix and architecture guide"
 
 ## Final verification
 
-- [ ] **Run the whole suite**
+- [x] **Run the whole suite**
 
 ```bash
 php artisan test --compact
@@ -8021,14 +8021,14 @@ vendor/bin/phpstan analyse
 
 All three clean.
 
-- [ ] **Run the interop suite end to end**
+- [x] **Run the interop suite end to end**
 
 ```bash
 tests/Interop/serve.sh &
 sleep 3 && tests/Interop/aws-cli.sh && .venv/bin/pytest tests/Interop/test_boto3.py -v
 ```
 
-- [ ] **Confirm the definition of done from spec A §15**
+- [x] **Confirm the definition of done from spec A §15**
 
 1. `php artisan test` green.
 2. Pint and PHPStan clean.
