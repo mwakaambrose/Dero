@@ -1,0 +1,16 @@
+Dero benchmark
+  date:     2026-08-04T14:39:43Z
+  host:     Darwin 25.5.0 arm64
+  cpu:      Apple M3
+  php:      8.4.21
+  server:   php artisan serve (built-in), http://127.0.0.1:8787
+
+SIZE             UPLOAD     DOWNLOAD        UP RATE      DOWN RATE
+1KB               0.32s        0.37s       0.0 MB/s       0.0 MB/s
+1MB               1.36s        0.33s       0.7 MB/s       3.0 MB/s
+100MB             3.62s        0.81s      27.6 MB/s     123.5 MB/s
+1GB              27.56s        5.24s      37.2 MB/s     195.4 MB/s
+
+20 concurrent 1 MB uploads
+  wall clock: 2.76s for 20 MB across 20 requests
+  aggregate:  7.2 MB/s
