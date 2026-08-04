@@ -2,18 +2,51 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\S3\AssignRequestId;
 use App\Http\Middleware\SetTeamUrlDefaults;
+use App\S3\Exceptions\InternalErrorException;
+use App\S3\Exceptions\MethodNotAllowedException;
+use App\S3\Exceptions\S3Exception;
+use App\S3\Http\S3ErrorResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        /*
+         | Routing order is deliberate, not incidental.
+         |
+         | routes/web.php is NOT host-constrained, so its routes match on any
+         | host — including the S3 endpoint host. Laravel matches routes in
+         | registration order, so registering web first lets "/" resolve to the
+         | dashboard welcome page even on the S3 host, shadowing ListBuckets.
+         |
+         | The S3 group is therefore registered first. It is domain-scoped, so
+         | it never affects the dashboard host; web routes are registered here
+         | rather than via the `web:` parameter purely to control this ordering.
+         */
+        then: function (): void {
+            $host = config('dero.endpoint_host');
+
+            // Fail closed: with no endpoint host configured the S3 API is not
+            // exposed at all, rather than mounting a wildcard /{bucket}/{key}
+            // route at the application root.
+            if (is_string($host) && $host !== '') {
+                Route::domain($host)
+                    ->middleware('s3')
+                    ->group(base_path('routes/s3.php'));
+            }
+
+            Route::middleware('web')->group(base_path('routes/web.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
@@ -24,9 +57,42 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
             SetTeamUrlDefaults::class,
         ]);
+
+        /*
+         | The S3 data plane shares nothing with the web group: no StartSession,
+         | no VerifyCsrfToken, no Inertia, no cookies. Requests are authenticated
+         | solely by AWS Signature V4.
+         */
+        $middleware->group('s3', [
+            AssignRequestId::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (Throwable $e, Request $request) {
+            // The request-id attribute marks a request as belonging to the S3
+            // data plane, which must never receive an HTML or JSON error page.
+            if (! $request->attributes->has('s3.request_id')) {
+                return null;
+            }
+
+            $requestId = (string) $request->attributes->get('s3.request_id');
+
+            if ($e instanceof S3Exception) {
+                return S3ErrorResponse::fromException($e, $requestId);
+            }
+
+            if ($e instanceof NotFoundHttpException || $e instanceof MethodNotAllowedHttpException) {
+                return S3ErrorResponse::fromException(new MethodNotAllowedException, $requestId);
+            }
+
+            // Anything else is an unexpected fault. Report InternalError rather
+            // than leaking a stack trace or a debug page to an S3 client.
+            report($e);
+
+            return S3ErrorResponse::fromException(new InternalErrorException, $requestId);
+        });
     })->create();
