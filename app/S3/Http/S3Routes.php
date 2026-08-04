@@ -45,12 +45,16 @@ final class S3Routes
         }
 
         Route::put($bucketUri, function (Request $request) {
+            SubResource::assertBucketSupported($request);
+
             return $request->query->has('cors')
                 ? app(BucketCorsController::class)->put($request)
                 : app(BucketController::class)->create($request);
         });
 
         Route::delete($bucketUri, function (Request $request) {
+            SubResource::assertBucketSupported($request);
+
             return $request->query->has('cors')
                 ? app(BucketCorsController::class)->delete($request)
                 : app(BucketController::class)->delete($request);
@@ -77,6 +81,8 @@ final class S3Routes
          | uses valueless parameters ("?location") as sub-resource markers.
          */
         Route::match(['GET', 'HEAD'], $bucketUri, function (Request $request) {
+            SubResource::assertBucketSupported($request);
+
             if ($request->isMethod('HEAD')) {
                 return app(BucketController::class)->head($request);
             }
@@ -105,6 +111,8 @@ final class S3Routes
          | query parameters, so each verb dispatches by hand.
          */
         Route::put($objectUri, function (Request $request) {
+            SubResource::assertObjectSupported($request);
+
             if ($request->query->has('uploadId') && $request->query->has('partNumber')) {
                 // A part carrying x-amz-copy-source is UploadPartCopy: the
                 // bytes come from an existing object rather than the body.
@@ -120,6 +128,8 @@ final class S3Routes
         // Laravel appends HEAD to every GET route, so a standalone HEAD route
         // would be silently replaced.
         Route::match(['GET', 'HEAD'], $objectUri, function (Request $request) {
+            SubResource::assertObjectSupported($request);
+
             $controller = app(ObjectController::class);
 
             if ($request->isMethod('HEAD')) {
@@ -132,12 +142,16 @@ final class S3Routes
         })->where('key', '.*');
 
         Route::delete($objectUri, function (Request $request) {
+            SubResource::assertObjectSupported($request);
+
             return $request->query->has('uploadId')
                 ? app(MultipartController::class)->abort($request)
                 : app(ObjectController::class)->delete($request);
         })->where('key', '.*');
 
         Route::post($objectUri, function (Request $request) {
+            SubResource::assertObjectSupported($request);
+
             $controller = app(MultipartController::class);
 
             return match (true) {
