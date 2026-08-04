@@ -1,0 +1,257 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - generic [ref=f2e7]:
+        - generic [ref=f2e8]:
+          - list [ref=f2e9]:
+            - listitem [ref=f2e10]:
+              - link "Laravel" [ref=f2e11] [cursor=pointer]:
+                - /url: /harvest/dashboard
+          - list [ref=f2e20]:
+            - listitem [ref=f2e21]:
+              - button "Harvest" [ref=f2e22]
+        - generic [ref=f2e26]:
+          - generic [ref=f2e27]: Platform
+          - list [ref=f2e28]:
+            - listitem [ref=f2e29]:
+              - link "Overview" [ref=f2e30] [cursor=pointer]:
+                - /url: /harvest/overview
+            - listitem [ref=f2e37]:
+              - link "Buckets" [ref=f2e38] [cursor=pointer]:
+                - /url: /harvest/buckets
+            - listitem [ref=f2e50]:
+              - link "Access keys" [ref=f2e51] [cursor=pointer]:
+                - /url: /harvest/access-keys
+            - listitem [ref=f2e56]:
+              - link "Connect" [ref=f2e57] [cursor=pointer]:
+                - /url: /harvest/connect
+            - listitem [ref=f2e61]:
+              - link "Activity" [ref=f2e62] [cursor=pointer]:
+                - /url: /harvest/activity
+        - generic [ref=f2e66]:
+          - list [ref=f2e69]:
+            - listitem [ref=f2e70]:
+              - link "Help" [ref=f2e71] [cursor=pointer]:
+                - /url: https://github.com/laravel/react-starter-kit
+          - list [ref=f2e80]:
+            - listitem [ref=f2e81]:
+              - button "AM Ambrose Mwaka Harvest" [ref=f2e82]:
+                - generic [ref=f2e83]: AM
+                - generic [ref=f2e85]:
+                  - generic [ref=f2e86]: Ambrose Mwaka
+                  - generic [ref=f2e87]: Harvest
+      - main [ref=f2e91]:
+        - generic [ref=f2e93]:
+          - button "Toggle sidebar" [ref=f2e94]
+          - navigation "breadcrumb" [ref=f2e96]:
+            - list [ref=f2e97]:
+              - listitem [ref=f2e98]:
+                - link "Overview" [disabled] [ref=f2e99]
+        - generic [ref=f2e100]:
+          - generic [ref=f2e101]:
+            - heading "Overview" [level=1] [ref=f2e102]
+            - paragraph [ref=f2e103]: Everything stored on this installation, over the last 14 days.
+          - generic [ref=f2e104]:
+            - generic [ref=f2e105]:
+              - generic [ref=f2e106]: Stored
+              - paragraph [ref=f2e110]: 1.1 GB
+              - paragraph [ref=f2e111]: 19 objects
+            - generic [ref=f2e112]:
+              - generic [ref=f2e113]: Buckets
+              - paragraph [ref=f2e125]: "4"
+              - paragraph [ref=f2e126]: 3 active keys
+            - generic [ref=f2e127]:
+              - generic [ref=f2e128]: Requests
+              - paragraph [ref=f2e136]: 38,082
+              - paragraph [ref=f2e137]: Last 14 days
+            - generic [ref=f2e138]:
+              - generic [ref=f2e139]: Bandwidth
+              - paragraph [ref=f2e144]: 7.6 GB
+              - paragraph [ref=f2e145]: Up and down combined
+          - generic [ref=f2e146]:
+            - generic [ref=f2e147]:
+              - generic [ref=f2e148]:
+                - heading "Storage" [level=3] [ref=f2e149]
+                - paragraph [ref=f2e150]: Total bytes held
+              - application [ref=f2e154]:
+                - generic [ref=f2e166]:
+                  - generic [ref=f2e167]:
+                    - generic [ref=f2e168]: 07-23
+                    - generic [ref=f2e170]: 07-25
+                    - generic [ref=f2e172]: 07-27
+                    - generic [ref=f2e174]: 07-29
+                    - generic [ref=f2e176]: 07-31
+                    - generic [ref=f2e178]: 08-02
+                    - generic [ref=f2e180]: 08-04
+                  - generic [ref=f2e182]:
+                    - generic [ref=f2e183]: 0 B
+                    - generic [ref=f2e185]: 429 MB
+                    - generic [ref=f2e187]: 858 MB
+                    - generic [ref=f2e189]: 1 GB
+                    - generic [ref=f2e191]: 2 GB
+            - generic [ref=f2e193]:
+              - generic [ref=f2e194]:
+                - heading "Requests" [level=3] [ref=f2e195]
+                - paragraph [ref=f2e196]: S3 API calls per day
+              - application [ref=f2e200]:
+                - generic [ref=f2e212]:
+                  - generic [ref=f2e213]:
+                    - generic [ref=f2e214]: 07-23
+                    - generic [ref=f2e216]: 07-25
+                    - generic [ref=f2e218]: 07-27
+                    - generic [ref=f2e220]: 07-29
+                    - generic [ref=f2e222]: 07-31
+                    - generic [ref=f2e224]: 08-02
+                    - generic [ref=f2e226]: 08-04
+                  - generic [ref=f2e228]:
+                    - generic [ref=f2e229]: "0"
+                    - generic [ref=f2e231]: 1,500
+                    - generic [ref=f2e233]: 3,000
+                    - generic [ref=f2e235]: 4,500
+                    - generic [ref=f2e237]: 6,000
+            - generic [ref=f2e239]:
+              - generic [ref=f2e240]:
+                - heading "Downloaded" [level=3] [ref=f2e241]
+                - paragraph [ref=f2e242]: Bytes served per day
+              - application [ref=f2e246]:
+                - generic [ref=f2e258]:
+                  - generic [ref=f2e259]:
+                    - generic [ref=f2e260]: 07-23
+                    - generic [ref=f2e262]: 07-25
+                    - generic [ref=f2e264]: 07-27
+                    - generic [ref=f2e266]: 07-29
+                    - generic [ref=f2e268]: 07-31
+                    - generic [ref=f2e270]: 08-02
+                    - generic [ref=f2e272]: 08-04
+                  - generic [ref=f2e274]:
+                    - generic [ref=f2e275]: 0 B
+                    - generic [ref=f2e277]: 238 MB
+                    - generic [ref=f2e279]: 477 MB
+                    - generic [ref=f2e281]: 715 MB
+                    - generic [ref=f2e283]: 954 MB
+            - generic [ref=f2e285]:
+              - generic [ref=f2e286]:
+                - heading "Uploaded" [level=3] [ref=f2e287]
+                - paragraph [ref=f2e288]: Bytes received per day
+              - application [ref=f2e292]:
+                - generic [ref=f2e304]:
+                  - generic [ref=f2e305]:
+                    - generic [ref=f2e306]: 07-23
+                    - generic [ref=f2e308]: 07-25
+                    - generic [ref=f2e310]: 07-27
+                    - generic [ref=f2e312]: 07-29
+                    - generic [ref=f2e314]: 07-31
+                    - generic [ref=f2e316]: 08-02
+                    - generic [ref=f2e318]: 08-04
+                  - generic [ref=f2e320]:
+                    - generic [ref=f2e321]: 0 B
+                    - generic [ref=f2e323]: 76 MB
+                    - generic [ref=f2e325]: 153 MB
+                    - generic [ref=f2e327]: 229 MB
+                    - generic [ref=f2e329]: 305 MB
+          - generic [ref=f2e331]:
+            - generic [ref=f2e332]:
+              - heading "Recently changed" [level=3] [ref=f2e334]
+              - list [ref=f2e335]:
+                - listitem [ref=f2e336]:
+                  - generic [ref=f2e341]:
+                    - paragraph [ref=f2e342]: invoices/2026/01/INV-1042.pdf
+                    - paragraph [ref=f2e343]: production · PDF
+                  - generic [ref=f2e344]: 180.0 KB
+                  - generic [ref=f2e345]: 371 hours ago
+                - listitem [ref=f2e346]:
+                  - generic [ref=f2e351]:
+                    - paragraph [ref=f2e352]: photos/2026/harvest-01.jpg
+                    - paragraph [ref=f2e353]: media · Image
+                  - generic [ref=f2e354]: 3.1 MB
+                  - generic [ref=f2e355]: 371 hours ago
+                - listitem [ref=f2e356]:
+                  - generic [ref=f2e361]:
+                    - paragraph [ref=f2e362]: css/site.css
+                    - paragraph [ref=f2e363]: public-assets · Text
+                  - generic [ref=f2e364]: 40.2 KB
+                  - generic [ref=f2e365]: 371 hours ago
+                - listitem [ref=f2e366]:
+                  - generic [ref=f2e371]:
+                    - paragraph [ref=f2e372]: fixtures/seed.json
+                    - paragraph [ref=f2e373]: staging · JSON
+                  - generic [ref=f2e374]: 18.0 KB
+                  - generic [ref=f2e375]: 371 hours ago
+                - listitem [ref=f2e376]:
+                  - generic [ref=f2e381]:
+                    - paragraph [ref=f2e382]: invoices/2026/01/INV-1043.pdf
+                    - paragraph [ref=f2e383]: production · PDF
+                  - generic [ref=f2e384]: 172.0 KB
+                  - generic [ref=f2e385]: 1,421 hours ago
+                - listitem [ref=f2e386]:
+                  - generic [ref=f2e391]:
+                    - paragraph [ref=f2e392]: photos/2026/harvest-02.jpg
+                    - paragraph [ref=f2e393]: media · Image
+                  - generic [ref=f2e394]: 2.8 MB
+                  - generic [ref=f2e395]: 1,421 hours ago
+            - generic [ref=f2e396]:
+              - heading "Largest buckets" [level=3] [ref=f2e398]
+              - list [ref=f2e399]:
+                - listitem [ref=f2e400]:
+                  - generic [ref=f2e401]:
+                    - link "production" [ref=f2e402] [cursor=pointer]:
+                      - /url: /harvest/buckets
+                    - generic [ref=f2e403]: 950.0 MB
+                - listitem [ref=f2e406]:
+                  - generic [ref=f2e407]:
+                    - link "media" [ref=f2e408] [cursor=pointer]:
+                      - /url: /harvest/buckets
+                    - generic [ref=f2e409]: 172.6 MB
+                - listitem [ref=f2e412]:
+                  - generic [ref=f2e413]:
+                    - link "public-assets" [ref=f2e414] [cursor=pointer]:
+                      - /url: /harvest/buckets
+                    - generic [ref=f2e415]: 495.4 KB
+                - listitem [ref=f2e418]:
+                  - generic [ref=f2e419]:
+                    - link "staging" [ref=f2e420] [cursor=pointer]:
+                      - /url: /harvest/buckets
+                    - generic [ref=f2e421]: 27.0 KB
+          - generic [ref=f2e424]:
+            - heading "Recent activity" [level=3] [ref=f2e426]
+            - list [ref=f2e427]:
+              - listitem [ref=f2e428]:
+                - generic [ref=f2e429]: success
+                - generic [ref=f2e430]: PutObject
+                - generic [ref=f2e431]: backups/db-2026-02-04.sql.gz
+                - generic [ref=f2e432]: 32 minutes ago
+              - listitem [ref=f2e433]:
+                - generic [ref=f2e434]: success
+                - generic [ref=f2e435]: GetObject
+                - generic [ref=f2e436]: exports/orders-2026-02-01.csv
+                - generic [ref=f2e437]: 173 hours ago
+              - listitem [ref=f2e438]:
+                - generic [ref=f2e439]: success
+                - generic [ref=f2e440]: ListObjectsV2
+                - generic [ref=f2e441]: 266 hours ago
+              - listitem [ref=f2e442]:
+                - generic [ref=f2e443]: success
+                - generic [ref=f2e444]: DeleteObject
+                - generic [ref=f2e445]: staging/fixtures/old.json
+                - generic [ref=f2e446]: 358 hours ago
+              - listitem [ref=f2e447]:
+                - generic [ref=f2e448]: denied
+                - generic [ref=f2e449]: GetObject
+                - generic [ref=f2e450]: production/backups/db-2026-02-04.sql.gz
+                - generic [ref=f2e451]: 451 hours ago
+              - listitem [ref=f2e452]:
+                - generic [ref=f2e453]: denied
+                - generic [ref=f2e454]: PutObject
+                - generic [ref=f2e455]: media/photos/2026/harvest-03.jpg
+                - generic [ref=f2e456]: 543 hours ago
+              - listitem [ref=f2e457]:
+                - generic [ref=f2e458]: success
+                - generic [ref=f2e459]: CreateBucket
+                - generic [ref=f2e460]: 636 hours ago
+              - listitem [ref=f2e461]:
+                - generic [ref=f2e462]: success
+                - generic [ref=f2e463]: CompleteMultipartUpload
+                - generic [ref=f2e464]: video/field-notes.mp4
+                - generic [ref=f2e465]: 728 hours ago
+    - region "Notifications alt+T"
+  - generic [ref=f2e466]: "229"

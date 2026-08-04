@@ -1,0 +1,117 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: Dero
+        - navigation [ref=e12]:
+          - link "Sign in" [ref=e13] [cursor=pointer]:
+            - /url: /login
+          - link "Get started" [ref=e14] [cursor=pointer]:
+            - /url: /register
+    - generic [ref=e16]:
+      - paragraph [ref=e17]: Self-hosted object storage
+      - heading "Storage you keep, on a server you own." [level=1] [ref=e24]: Storage you keep,on a server you own.
+      - paragraph [ref=e25]: Dero speaks the S3 API, so the tools you already use work unchanged. Point them at your own machine instead of someone else’s cloud.
+      - generic [ref=e26]:
+        - link "Set up your storage" [ref=e27] [cursor=pointer]:
+          - /url: /register
+        - link "Sign in" [ref=e28] [cursor=pointer]:
+          - /url: /login
+      - paragraph [ref=e29]: "Dero is the granary of the Luo and Acholi: a woven basket raised on legs, roofed with thatch, keeping the harvest dry and out of reach."
+    - generic [ref=e31]:
+      - heading "Two bad options, until now" [level=2] [ref=e32]
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - paragraph [ref=e35]: Someone else’s cloud
+          - paragraph [ref=e36]: Straightforward to start, then the egress bill arrives and your data lives somewhere you cannot inspect.
+        - generic [ref=e37]:
+          - paragraph [ref=e38]: A cluster to operate
+          - paragraph [ref=e39]: Full control, at the cost of running distributed storage you now have to keep alive yourself.
+        - generic [ref=e40]:
+          - paragraph [ref=e41]: "Dero: one application, one server"
+          - paragraph [ref=e42]: Install it on a VPS, point your S3 client at it, and carry on. No cluster, no egress charges, no vendor.
+    - generic [ref=e44]:
+      - heading "What it does" [level=2] [ref=e45]
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - heading "Signature V4 authentication" [level=3] [ref=e51]
+          - paragraph [ref=e52]: The request signing every AWS SDK already speaks, including the chunked upload framing the CLI uses.
+        - generic [ref=e53]:
+          - heading "Multipart uploads" [level=3] [ref=e58]
+          - paragraph [ref=e59]: Large objects arrive in parts and are assembled server-side, with the ETag AWS clients expect.
+        - generic [ref=e60]:
+          - heading "Range requests" [level=3] [ref=e67]
+          - paragraph [ref=e68]: Byte ranges return 206 with a correct Content-Range, so video seeking and resumable downloads work.
+        - generic [ref=e69]:
+          - heading "Presigned URLs" [level=3] [ref=e76]
+          - paragraph [ref=e77]: Share a private object for five minutes or seven days. Opening one needs no dashboard session.
+        - generic [ref=e78]:
+          - heading "Streaming, end to end" [level=3] [ref=e89]
+          - paragraph [ref=e90]: Bytes move in fixed-size chunks. Memory stays flat whether the object is one kilobyte or one gigabyte.
+        - generic [ref=e91]:
+          - heading "Scoped access keys" [level=3] [ref=e95]
+          - paragraph [ref=e96]: Grant read, write, delete or list, optionally confined to named buckets. Revoke any key instantly.
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - heading "Works with what you already use" [level=2] [ref=e101]
+          - paragraph [ref=e102]: Change the endpoint. Everything else stays the same.
+        - tablist "Client examples" [ref=e103]:
+          - tab "AWS CLI" [selected] [ref=e104]
+          - tab "Laravel" [ref=e105]
+          - tab "Python" [ref=e106]
+          - tab "rclone" [ref=e107]
+      - generic [ref=e108]:
+        - button "Copy" [ref=e109]
+        - code [ref=e111]: "aws configure --profile dero # Access key ID and secret come from your Dero dashboard aws s3 mb s3://production \\ --endpoint-url https://s3.example.com --profile dero aws s3 cp report.pdf s3://production/report.pdf \\ --endpoint-url https://s3.example.com --profile dero"
+    - generic [ref=e113]:
+      - heading "What works, and what doesn’t" [level=2] [ref=e114]
+      - paragraph [ref=e115]: Dero is not a full reimplementation of S3. Here is the line, drawn plainly.
+      - table [ref=e117]:
+        - rowgroup [ref=e118]:
+          - row [ref=e119]:
+            - cell "Bucket create, list, head, delete" [ref=e120]
+            - cell "path and virtual-host addressing" [ref=e126]
+          - row [ref=e127]:
+            - cell "Object put, get, head, delete" [ref=e128]
+            - cell "streamed in both directions" [ref=e134]
+          - row [ref=e135]:
+            - cell "ListObjectsV2" [ref=e136]
+            - cell "prefix, delimiter, pagination" [ref=e142]
+          - row [ref=e143]:
+            - cell "Multipart upload" [ref=e144]
+            - cell "AWS-compatible multipart ETag" [ref=e150]
+          - row [ref=e151]:
+            - cell "Range requests" [ref=e152]
+            - cell "single range" [ref=e158]
+          - row [ref=e159]:
+            - cell "CopyObject" [ref=e160]
+            - cell "server-side, metadata directives" [ref=e166]
+          - row [ref=e167]:
+            - cell "Versioning" [ref=e168]
+            - cell "columns reserved, not implemented" [ref=e173]
+          - row [ref=e174]:
+            - cell "Object lock and retention" [ref=e175]
+            - cell "not implemented" [ref=e180]
+          - row [ref=e181]:
+            - cell "Lifecycle and replication" [ref=e182]
+            - cell "not implemented" [ref=e187]
+          - row [ref=e188]:
+            - cell "Server-side encryption" [ref=e189]
+            - cell "use disk encryption on the host" [ref=e194]
+    - generic [ref=e196]:
+      - generic [ref=e197]:
+        - heading "Runs on one ordinary server" [level=2] [ref=e198]
+        - paragraph [ref=e199]: Ubuntu, Nginx, PHP-FPM, MySQL, Redis. Object bytes go straight to the filesystem; the database holds only the metadata that points at them.
+        - list [ref=e200]:
+          - listitem [ref=e201]: No Docker requirement
+          - listitem [ref=e205]: No cluster to operate
+          - listitem [ref=e209]: Storage backends are swappable later
+      - generic [ref=e213]:
+        - paragraph [ref=e214]: Install
+        - code [ref=e218]: git clone … dero && cd dero composer install --no-dev npm ci && npm run build php artisan migrate --force
+        - paragraph [ref=e219]: Then open the dashboard and finish setup in the browser.
+    - contentinfo [ref=e223]:
+      - generic [ref=e224]: Dero — object storage you keep
+      - generic [ref=e230]: Self-hosted · MIT licensed
+  - region "Notifications alt+T"

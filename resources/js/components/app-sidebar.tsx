@@ -1,5 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    Activity,
+    Boxes,
+    KeyRound,
+    LayoutGrid,
+    LifeBuoy,
+    Plug,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,6 +22,13 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import {
+    accessKeys as storageAccessKeys,
+    activity as storageActivity,
+    buckets as storageBuckets,
+    connect as storageConnect,
+    overview as storageOverview,
+} from '@/routes/storage';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -23,24 +37,35 @@ export function AppSidebar() {
         ? dashboard(page.props.currentTeam.slug)
         : '/';
 
-    const mainNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboardUrl,
-            icon: LayoutGrid,
-        },
-    ];
+    const slug = page.props.currentTeam?.slug;
+
+    const mainNavItems: NavItem[] = slug
+        ? [
+              {
+                  title: 'Overview',
+                  href: storageOverview(slug),
+                  icon: LayoutGrid,
+              },
+              { title: 'Buckets', href: storageBuckets(slug), icon: Boxes },
+              {
+                  title: 'Access keys',
+                  href: storageAccessKeys(slug),
+                  icon: KeyRound,
+              },
+              { title: 'Connect', href: storageConnect(slug), icon: Plug },
+              {
+                  title: 'Activity',
+                  href: storageActivity(slug),
+                  icon: Activity,
+              },
+          ]
+        : [{ title: 'Dashboard', href: dashboardUrl, icon: LayoutGrid }];
 
     const footerNavItems: NavItem[] = [
         {
-            title: 'Repository',
+            title: 'Help',
             href: 'https://github.com/laravel/react-starter-kit',
-            icon: FolderGit2,
-        },
-        {
-            title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#react',
-            icon: BookOpen,
+            icon: LifeBuoy,
         },
     ];
 

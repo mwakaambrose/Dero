@@ -62,74 +62,78 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    /* Dero: warm earth drawn from the granary — millet gold on sun-bleached
+       clay. Surfaces carry a trace of amber so the interface reads as earthen
+       rather than clinical; colour is reserved for meaning. */
+    --background: oklch(0.992 0.004 85);
+    --foreground: oklch(0.22 0.018 60);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.22 0.018 60);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
+    --popover-foreground: oklch(0.22 0.018 60);
+    --primary: oklch(0.74 0.135 78);
+    --primary-foreground: oklch(0.21 0.03 60);
+    --secondary: oklch(0.962 0.008 82);
+    --secondary-foreground: oklch(0.28 0.02 60);
+    --muted: oklch(0.962 0.008 82);
+    --muted-foreground: oklch(0.52 0.022 68);
+    --accent: oklch(0.945 0.018 82);
+    --accent-foreground: oklch(0.26 0.025 60);
+    --destructive: oklch(0.55 0.2 27);
+    --destructive-foreground: oklch(0.99 0.005 85);
+    --border: oklch(0.902 0.011 80);
+    --input: oklch(0.902 0.011 80);
+    --ring: oklch(0.74 0.135 78);
+    --chart-1: oklch(0.74 0.135 78);
+    --chart-2: oklch(0.52 0.075 55);
+    --chart-3: oklch(0.58 0.09 145);
+    --chart-4: oklch(0.66 0.13 35);
+    --chart-5: oklch(0.62 0.045 240);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+    --sidebar: oklch(0.972 0.008 82);
+    --sidebar-foreground: oklch(0.24 0.018 60);
+    --sidebar-primary: oklch(0.74 0.135 78);
+    --sidebar-primary-foreground: oklch(0.21 0.03 60);
+    --sidebar-accent: oklch(0.93 0.018 82);
+    --sidebar-accent-foreground: oklch(0.26 0.025 60);
+    --sidebar-border: oklch(0.895 0.012 80);
+    --sidebar-ring: oklch(0.74 0.135 78);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    /* Grain kept in shade, not in a void: a warm charcoal rather than black. */
+    --background: oklch(0.185 0.012 62);
+    --foreground: oklch(0.95 0.008 85);
+    --card: oklch(0.222 0.014 62);
+    --card-foreground: oklch(0.95 0.008 85);
+    --popover: oklch(0.222 0.014 62);
+    --popover-foreground: oklch(0.95 0.008 85);
+    --primary: oklch(0.78 0.14 78);
+    --primary-foreground: oklch(0.2 0.025 60);
+    --secondary: oklch(0.272 0.016 62);
+    --secondary-foreground: oklch(0.95 0.008 85);
+    --muted: oklch(0.272 0.016 62);
+    --muted-foreground: oklch(0.705 0.022 78);
+    --accent: oklch(0.3 0.022 68);
+    --accent-foreground: oklch(0.95 0.008 85);
+    --destructive: oklch(0.48 0.17 27);
+    --destructive-foreground: oklch(0.95 0.008 85);
+    --border: oklch(0.302 0.016 62);
+    --input: oklch(0.302 0.016 62);
+    --ring: oklch(0.78 0.14 78);
+    --chart-1: oklch(0.78 0.14 78);
+    --chart-2: oklch(0.66 0.08 55);
+    --chart-3: oklch(0.68 0.11 145);
+    --chart-4: oklch(0.7 0.14 35);
+    --chart-5: oklch(0.68 0.06 240);
+    --sidebar: oklch(0.162 0.012 62);
+    --sidebar-foreground: oklch(0.93 0.008 85);
+    --sidebar-primary: oklch(0.78 0.14 78);
+    --sidebar-primary-foreground: oklch(0.2 0.025 60);
+    --sidebar-accent: oklch(0.272 0.016 62);
+    --sidebar-accent-foreground: oklch(0.93 0.008 85);
+    --sidebar-border: oklch(0.28 0.016 62);
+    --sidebar-ring: oklch(0.78 0.14 78);
 }
 
 @layer base {
@@ -139,5 +143,38 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+/*
+ | The weave.
+ |
+ | A dero is a woven basket. This lattice is the one decorative motif in the
+ | product, used behind the landing hero and nowhere else — the over/under
+ | rhythm of the basketwork, rendered as two crossed repeating gradients so it
+ | costs no image request and scales with the viewport.
+ */
+.dero-weave {
+    background-image:
+        repeating-linear-gradient(
+            68deg,
+            color-mix(in oklch, var(--primary) 22%, transparent) 0 1px,
+            transparent 1px 14px
+        ),
+        repeating-linear-gradient(
+            -68deg,
+            color-mix(in oklch, var(--foreground) 10%, transparent) 0 1px,
+            transparent 1px 14px
+        );
+    mask-image: radial-gradient(120% 90% at 82% 12%, #000 0%, transparent 68%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

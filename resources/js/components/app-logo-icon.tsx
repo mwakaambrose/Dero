@@ -1,12 +1,42 @@
 import type { SVGAttributes } from 'react';
 
+/**
+ * The Dero mark: a granary reduced to geometry.
+ *
+ * A conical thatched roof over a woven cylindrical body, standing on legs that
+ * lift the grain clear of the ground. Single fill, no gradients, legible at
+ * 16px as a favicon.
+ */
 export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
     return (
-        <svg {...props} viewBox="0 0 40 42" xmlns="http://www.w3.org/2000/svg">
+        <svg
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            {...props}
+        >
+            {/* Roof */}
+            <path d="M16 2 3.5 12.2h25L16 2Z" fill="currentColor" />
+            {/* Woven body */}
             <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M17.2 5.63325L8.6 0.855469L0 5.63325V32.1434L16.2 41.1434L32.4 32.1434V23.699L40 19.4767V9.85547L31.4 5.07769L22.8 9.85547V18.2999L17.2 21.411V5.63325ZM38 18.2999L32.4 21.411V15.2545L38 12.1434V18.2999ZM36.9409 10.4439L31.4 13.5221L25.8591 10.4439L31.4 7.36561L36.9409 10.4439ZM24.8 18.2999V12.1434L30.4 15.2545V21.411L24.8 18.2999ZM23.8 20.0323L29.3409 23.1105L16.2 30.411L10.6591 27.3328L23.8 20.0323ZM7.6 27.9212L15.2 32.1434V38.2999L2 30.9666V7.92116L7.6 11.0323V27.9212ZM8.6 9.29991L3.05913 6.22165L8.6 3.14339L14.1409 6.22165L8.6 9.29991ZM30.4 24.8101L17.2 32.1434V38.2999L30.4 30.9666V24.8101ZM9.6 11.0323L15.2 7.92117V22.5221L9.6 25.6333V11.0323Z"
+                d="M6 14.2h20v9.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9.4Z"
+                fill="currentColor"
+                opacity="0.9"
+            />
+            {/* Weave bands, knocked out of the body */}
+            <path
+                d="M6 17.4h20M6 20.6h20"
+                stroke="var(--background, #fff)"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
+            {/* Legs */}
+            <path
+                d="M9.5 26v3.6M22.5 26v3.6M16 26v3.6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
             />
         </svg>
     );

@@ -1,0 +1,104 @@
+- generic [ref=f3e2]:
+  - generic [ref=f3e45]:
+    - generic [ref=f3e49]:
+      - generic [ref=f3e50]:
+        - list [ref=f3e51]:
+          - listitem [ref=f3e52]:
+            - link "Dero Object storage" [ref=f3e53] [cursor=pointer]:
+              - /url: /harvest/dashboard
+              - generic [ref=f3e60]:
+                - generic [ref=f3e61]: Dero
+                - generic [ref=f3e62]: Object storage
+        - list [ref=f3e63]:
+          - listitem [ref=f3e64]:
+            - button "Harvest" [ref=f3e65]
+      - generic [ref=f3e69]:
+        - generic [ref=f3e70]: Platform
+        - list [ref=f3e71]:
+          - listitem [ref=f3e72]:
+            - link "Overview" [ref=f3e73] [cursor=pointer]:
+              - /url: /harvest/overview
+          - listitem [ref=f3e80]:
+            - link "Buckets" [ref=f3e81] [cursor=pointer]:
+              - /url: /harvest/buckets
+          - listitem [ref=f3e93]:
+            - link "Access keys" [ref=f3e94] [cursor=pointer]:
+              - /url: /harvest/access-keys
+          - listitem [ref=f3e99]:
+            - link "Connect" [ref=f3e100] [cursor=pointer]:
+              - /url: /harvest/connect
+          - listitem [ref=f3e104]:
+            - link "Activity" [ref=f3e105] [cursor=pointer]:
+              - /url: /harvest/activity
+      - generic [ref=f3e109]:
+        - list [ref=f3e112]:
+          - listitem [ref=f3e113]:
+            - link "Help" [ref=f3e114] [cursor=pointer]:
+              - /url: https://github.com/laravel/react-starter-kit
+        - list [ref=f3e123]:
+          - listitem [ref=f3e124]:
+            - button "AM Ambrose Mwaka Harvest" [ref=f3e125]:
+              - generic [ref=f3e126]: AM
+              - generic [ref=f3e128]:
+                - generic [ref=f3e129]: Ambrose Mwaka
+                - generic [ref=f3e130]: Harvest
+    - main [ref=f3e134]:
+      - generic [ref=f3e136]:
+        - button "Toggle sidebar" [ref=f3e137]
+        - navigation "breadcrumb" [ref=f3e139]:
+          - list [ref=f3e140]:
+            - listitem [ref=f3e141]:
+              - link "Buckets" [ref=f3e142] [cursor=pointer]:
+                - /url: /harvest/buckets
+            - listitem [ref=f3e143]
+            - listitem [ref=f3e146]:
+              - link "production" [disabled] [ref=f3e147]
+      - generic [ref=f3e148]:
+        - generic [ref=f3e149]:
+          - generic [ref=f3e150]:
+            - heading "production" [level=1] [ref=f3e151]
+            - paragraph [ref=f3e152]:
+              - generic [ref=f3e153]: 8 objects
+              - generic [ref=f3e154]: ·
+              - generic [ref=f3e155]: 950.0 MB
+              - generic [ref=f3e156]: ·
+              - generic [ref=f3e157]: us-east-1
+              - generic [ref=f3e158]: Private
+          - textbox "Search objects by key" [ref=f3e163]:
+            - /placeholder: Search this bucket
+        - navigation "Prefix" [ref=f3e164]:
+          - button "production" [ref=f3e165]
+        - table [ref=f3e167]:
+          - rowgroup [ref=f3e168]:
+            - row [ref=f3e169]:
+              - columnheader "Name" [ref=f3e170]
+              - columnheader "Type" [ref=f3e171]
+              - columnheader "Size" [ref=f3e172]
+              - columnheader "Modified" [ref=f3e173]
+              - columnheader [ref=f3e174]
+          - rowgroup [ref=f3e175]:
+            - row [ref=f3e176] [cursor=pointer]:
+              - cell [ref=f3e177]
+              - cell "Prefix" [ref=f3e181]
+              - cell "933.0 MB" [ref=f3e182]
+              - cell "2 objects" [ref=f3e183]
+              - cell [ref=f3e184]
+            - row [ref=f3e187] [cursor=pointer]:
+              - cell [ref=f3e188]
+              - cell "Prefix" [ref=f3e192]
+              - cell "16.4 MB" [ref=f3e193]
+              - cell "2 objects" [ref=f3e194]
+              - cell [ref=f3e195]
+            - row [ref=f3e198] [cursor=pointer]:
+              - cell [ref=f3e199]
+              - cell "Prefix" [ref=f3e203]
+              - cell "549.0 KB" [ref=f3e204]
+              - cell "3 objects" [ref=f3e205]
+              - cell [ref=f3e206]
+            - row [ref=f3e209] [cursor=pointer]:
+              - cell "README.md" [ref=f3e210]
+              - cell "Text" [ref=f3e216]
+              - cell "2.0 KB" [ref=f3e217]
+              - cell "Aug 2, 2026, 1:15 PM" [ref=f3e218]
+              - cell [ref=f3e219]
+  - region "Notifications alt+T"
