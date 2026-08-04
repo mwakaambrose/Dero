@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\S3;
 
 use App\Actions\S3\CompleteMultipartUpload;
+use App\Actions\S3\CopyObject;
 use App\Actions\S3\CreateMultipartUpload;
 use App\Actions\S3\UploadPart;
 use App\Http\Controllers\Controller;
@@ -16,6 +17,7 @@ use App\S3\Exceptions\AccessDeniedException;
 use App\S3\Exceptions\InvalidPartException;
 use App\S3\Exceptions\NoSuchUploadException;
 use App\S3\Http\ObjectMetadata;
+use App\S3\Http\RangeHeader;
 use App\S3\Http\RequestBodyStream;
 use App\S3\Values\ObjectKey;
 use App\S3\Xml\XmlReader;
@@ -32,6 +34,7 @@ final class MultipartController extends Controller
         private readonly CreateMultipartUpload $createUpload,
         private readonly UploadPart $uploadPart,
         private readonly CompleteMultipartUpload $completeUpload,
+        private readonly CopyObject $copyObject,
         private readonly ObjectStorageBackend $storage,
     ) {}
 
@@ -79,6 +82,90 @@ final class MultipartController extends Controller
         }
 
         return new Response('', 200, ['ETag' => '"'.$part->etag.'"']);
+    }
+
+    /**
+     * PUT /{bucket}/{key}?partNumber=N&uploadId=… with x-amz-copy-source —
+     * UploadPartCopy.
+     *
+     * Used by clients that assemble a large object server-side, and by
+     * `aws s3 cp` for objects above the multipart threshold when both ends are
+     * already in the bucket — the bytes never travel to the client and back.
+     */
+    public function uploadCopy(Request $request): Response
+    {
+        $upload = $this->upload_($request);
+        $partNumber = (int) $request->query('partNumber');
+        $accessKey = $request->attributes->get('s3.access_key');
+
+        if (! $accessKey instanceof AccessKey) {
+            throw new AccessDeniedException;
+        }
+
+        $source = $this->copyObject->resolveSource(
+            (string) $request->header('x-amz-copy-source'),
+            $accessKey,
+        );
+
+        // Ranges here are validated against the source, not the destination,
+        // and an unsatisfiable one is a client error rather than a silent
+        // whole-object copy.
+        $range = RangeHeader::parse(
+            $request->header('x-amz-copy-source-range'),
+            $source->size_bytes,
+        );
+
+        $part = $this->copyObject->handlePart($source, $upload, $partNumber, $range);
+
+        $xml = XmlWriter::render('CopyPartResult', [
+            'ETag' => '"'.$part->etag.'"',
+            'LastModified' => $part->updated_at?->toIso8601ZuluString(),
+        ], ['xmlns' => self::XMLNS]);
+
+        return new Response($xml, 200, ['Content-Type' => 'application/xml']);
+    }
+
+    /**
+     * GET /{bucket}?uploads — ListMultipartUploads.
+     *
+     * Clients call this to find and resume or abort uploads left behind by an
+     * interrupted transfer; `aws s3api list-multipart-uploads` is the usual
+     * way orphaned parts are discovered.
+     */
+    public function listUploads(Request $request): Response
+    {
+        $bucket = $this->bucket($request);
+        $prefix = $request->query('prefix');
+        $prefix = \is_string($prefix) ? $prefix : '';
+
+        $uploads = MultipartUpload::query()
+            ->where('bucket_id', $bucket->id)
+            // ResolveBucket already scopes the bucket to the caller's team;
+            // this keeps the isolation explicit at the query that reads rows.
+            ->where('team_id', $bucket->team_id)
+            ->when($prefix !== '', fn ($query) => $query->whereLike('key', $prefix.'%'))
+            ->orderBy('key')
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn (MultipartUpload $upload): array => [
+                'Key' => $upload->key,
+                'UploadId' => $upload->id,
+                'StorageClass' => 'STANDARD',
+                'Initiated' => $upload->created_at?->toIso8601ZuluString(),
+            ])
+            ->all();
+
+        $xml = XmlWriter::render('ListMultipartUploadsResult', [
+            'Bucket' => $bucket->name,
+            'KeyMarker' => '',
+            'UploadIdMarker' => '',
+            'MaxUploads' => 1000,
+            'Prefix' => $prefix === '' ? null : $prefix,
+            'IsTruncated' => false,
+            'Upload' => $uploads,
+        ], ['xmlns' => self::XMLNS]);
+
+        return new Response($xml, 200, ['Content-Type' => 'application/xml']);
     }
 
     /**

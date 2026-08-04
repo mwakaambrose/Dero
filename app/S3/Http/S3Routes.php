@@ -64,7 +64,12 @@ final class S3Routes
 
             return match (true) {
                 $request->query->has('location') => app(BucketController::class)->location($request),
-                default => app(ObjectListController::class)->list($request),
+                $request->query->has('uploads') => app(MultipartController::class)->listUploads($request),
+                // list-type=2 selects ListObjectsV2; its absence means a client
+                // still speaking v1, which is a different response shape rather
+                // than an error.
+                $request->query('list-type') === '2' => app(ObjectListController::class)->list($request),
+                default => app(ObjectListController::class)->listV1($request),
             };
         });
 
@@ -80,9 +85,15 @@ final class S3Routes
          | query parameters, so each verb dispatches by hand.
          */
         Route::put($objectUri, function (Request $request) {
-            return $request->query->has('uploadId') && $request->query->has('partNumber')
-                ? app(MultipartController::class)->upload($request)
-                : app(ObjectController::class)->put($request);
+            if ($request->query->has('uploadId') && $request->query->has('partNumber')) {
+                // A part carrying x-amz-copy-source is UploadPartCopy: the
+                // bytes come from an existing object rather than the body.
+                return $request->hasHeader('x-amz-copy-source')
+                    ? app(MultipartController::class)->uploadCopy($request)
+                    : app(MultipartController::class)->upload($request);
+            }
+
+            return app(ObjectController::class)->put($request);
         })->where('key', '.*');
 
         // GET and HEAD share a route for the same reason as the bucket routes:

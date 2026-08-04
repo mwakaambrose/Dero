@@ -197,7 +197,7 @@ export default function Welcome() {
             <div className="min-h-dvh bg-background text-foreground">
                 <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur">
                     <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-                        <span className="flex items-center gap-2.5 font-semibold tracking-tight">
+                        <span className="flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight">
                             <AppLogoIcon className="size-7 text-primary" />
                             Dero
                         </span>
@@ -234,7 +234,7 @@ export default function Welcome() {
                             Self-hosted object storage
                         </p>
 
-                        <h1 className="max-w-3xl text-5xl leading-[1.05] font-semibold tracking-[-0.035em] text-balance md:text-7xl">
+                        <h1 className="max-w-3xl text-5xl leading-[1.05] font-semibold tracking-[-0.02em] text-balance md:text-7xl">
                             Storage you keep,
                             <br />
                             on a server you own.

@@ -6,12 +6,16 @@ namespace App\Actions\S3;
 
 use App\Models\AccessKey;
 use App\Models\Bucket;
+use App\Models\MultipartPart;
+use App\Models\MultipartUpload;
 use App\Models\S3Object;
 use App\S3\Exceptions\AccessDeniedException;
+use App\S3\Exceptions\InvalidPartException;
 use App\S3\Exceptions\InvalidRequestException;
 use App\S3\Exceptions\NoSuchBucketException;
 use App\S3\Exceptions\NoSuchKeyException;
 use App\S3\Http\ObjectMetadata;
+use App\S3\Http\RangeHeader;
 use App\S3\Values\ObjectKey;
 use App\Storage\Contracts\ObjectStorageBackend;
 use App\Storage\ObjectPathGenerator;
@@ -20,6 +24,8 @@ use Illuminate\Support\Str;
 
 final class CopyObject
 {
+    private const int MAX_PART_NUMBER = 10000;
+
     public function __construct(private readonly ObjectStorageBackend $storage) {}
 
     /**
@@ -69,6 +75,51 @@ final class CopyObject
         }
 
         return $object;
+    }
+
+    /**
+     * Copy a source object, or a byte range of it, into a multipart part.
+     *
+     * The source is resolved by the caller through resolveSource(), so the
+     * tenant check has already happened on the same code path a plain
+     * CopyObject uses.
+     *
+     * The bytes are streamed through putPart() rather than copied with
+     * copy(): the part's MD5 is required at completion to build the multipart
+     * ETag, and streaming computes it in the single pass that writes the file
+     * instead of reading the whole part back a second time.
+     */
+    public function handlePart(
+        S3Object $source,
+        MultipartUpload $upload,
+        int $partNumber,
+        ?RangeHeader $range,
+    ): MultipartPart {
+        if ($partNumber < 1 || $partNumber > self::MAX_PART_NUMBER) {
+            throw new InvalidPartException($partNumber);
+        }
+
+        $stream = $range === null
+            ? $this->storage->readStream($source->storage_path)
+            : $this->storage->readRange($source->storage_path, $range->start, $range->length());
+
+        try {
+            $stored = $this->storage->putPart($upload->id, $partNumber, $stream);
+        } finally {
+            if (\is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        return MultipartPart::updateOrCreate(
+            ['multipart_upload_id' => $upload->id, 'part_number' => $partNumber],
+            [
+                'size_bytes' => $stored->size,
+                'etag' => $stored->md5Hex,
+                'checksum_md5' => $stored->md5Hex,
+                'storage_path' => $stored->path,
+            ],
+        );
     }
 
     /**
