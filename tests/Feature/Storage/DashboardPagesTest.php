@@ -31,7 +31,7 @@ beforeEach(function () {
 it('renders every storage screen for a signed-in member', function (string $path) {
     $this->actingAs($this->user)->get("/harvest/{$path}")->assertOk();
 })->with([
-    'overview',
+    'dashboard',
     'buckets',
     'buckets/production',
     'access-keys',
@@ -140,5 +140,9 @@ it('refuses to browse another team\'s bucket', function () {
 });
 
 it('requires authentication', function () {
-    $this->get('/harvest/overview')->assertRedirect();
+    $this->get('/harvest/dashboard')->assertRedirect();
+});
+
+it('no longer serves the old overview URL', function () {
+    $this->actingAs($this->user)->get('/harvest/overview')->assertNotFound();
 });

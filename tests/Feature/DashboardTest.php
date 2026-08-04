@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\TeamRole;
+use App\Models\AccessKey;
+use App\Models\Bucket;
+use App\Models\S3Object;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
@@ -132,4 +135,92 @@ test('dashboard does not include or delete other users invitations', function ()
     $this->assertDatabaseHas('team_invitations', [
         'id' => $invitation->id,
     ]);
+});
+
+test('dashboard carries the storage overview for the current team', function () {
+    $user = User::factory()->create();
+    $team = $user->currentTeam;
+
+    $bucket = Bucket::factory()->create([
+        'team_id' => $team->id,
+        'name' => 'production',
+        'storage_bytes' => 2048,
+        'objects_count' => 1,
+    ]);
+
+    S3Object::factory()->for($bucket)->withKey('README.md')->create([
+        'team_id' => $team->id,
+    ]);
+
+    AccessKey::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+
+    $response = $this->actingAs($user)->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('dashboard')
+        ->where('stats.storageBytes', 2048)
+        ->where('stats.bucketCount', 1)
+        ->where('stats.accessKeyCount', 1)
+        ->has('series')
+        ->has('largestBuckets', 1)
+        ->where('largestBuckets.0.name', 'production')
+        ->has('recentObjects', 1)
+        ->where('recentObjects.0.key', 'README.md')
+        ->has('activity'),
+    );
+});
+
+test('dashboard reports the volume behind the storage root', function () {
+    $user = User::factory()->create();
+
+    config()->set('dero.storage_root', storage_path('framework'));
+
+    $response = $this->actingAs($user)->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('dashboard')
+        ->where('capacity.totalBytes', fn ($bytes) => is_int($bytes) && $bytes > 0)
+        ->where('capacity.freeBytes', fn ($bytes) => is_int($bytes) && $bytes >= 0),
+    );
+});
+
+test('dashboard reports no volume when the storage root is missing', function () {
+    $user = User::factory()->create();
+
+    config()->set('dero.storage_root', storage_path('nowhere-'.uniqid()));
+
+    $response = $this->actingAs($user)->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('dashboard')
+        ->where('capacity.totalBytes', null)
+        ->where('capacity.freeBytes', null),
+    );
+});
+
+test('dashboard does not leak another teams storage', function () {
+    $user = User::factory()->create();
+
+    $otherBucket = Bucket::factory()->create([
+        'name' => 'theirs',
+        'storage_bytes' => 9999,
+    ]);
+
+    S3Object::factory()->for($otherBucket)->withKey('secret.txt')->create([
+        'team_id' => $otherBucket->team_id,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('dashboard')
+        ->where('stats.storageBytes', 0)
+        ->where('stats.bucketCount', 0)
+        ->has('largestBuckets', 0)
+        ->has('recentObjects', 0),
+    );
 });

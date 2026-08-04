@@ -136,4 +136,19 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return S3ErrorResponse::fromException(new InternalErrorException, $requestId);
         });
+
+        // A dashboard upload runs the same actions the data plane runs, so it
+        // can raise the same protocol exceptions. The browser is talking to the
+        // dashboard rather than to an S3 client, so it gets the error code as
+        // JSON instead of an XML error document.
+        $exceptions->render(function (S3Exception $e, Request $request) {
+            if ($request->attributes->has('s3.request_id')) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode(),
+            ], $e->statusCode());
+        });
     })->create();

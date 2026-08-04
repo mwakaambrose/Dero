@@ -240,7 +240,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <TeamSwitcher inHeader />
+                        <TeamSwitcher />
                     </div>
                 </div>
             </div>

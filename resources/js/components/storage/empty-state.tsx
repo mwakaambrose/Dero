@@ -14,12 +14,16 @@ type Props = {
  */
 export function EmptyState({ icon: Icon, title, body, action }: Props) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-16 text-center">
-            <div className="mb-4 rounded-full border border-border bg-card p-3">
-                <Icon className="size-5 text-primary" />
-            </div>
-            <h3 className="mb-1.5 font-medium">{title}</h3>
-            <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+        <div className="flex flex-col items-start rounded-lg border border-dashed border-border bg-secondary/40 px-6 py-10">
+            <Icon
+                className="size-5 text-primary"
+                aria-hidden="true"
+                strokeWidth={1.75}
+            />
+            <h3 className="mt-4 font-display text-lg font-semibold tracking-tight">
+                {title}
+            </h3>
+            <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
                 {body}
             </p>
             {action ? <div className="mt-6">{action}</div> : null}

@@ -21,12 +21,14 @@
 
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
+            /* Must track --background in app.css, or the first paint flashes
+               a colour the app never uses. */
             html {
-                background-color: oklch(1 0 0);
+                background-color: oklch(0.992 0.004 85);
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: oklch(0.185 0.012 62);
             }
         </style>
 

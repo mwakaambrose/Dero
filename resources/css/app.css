@@ -14,6 +14,10 @@
 
     --font-display: 'Fraunces', ui-serif, Georgia, Cambria, serif;
 
+    --font-mono:
+        'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
+        monospace;
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
@@ -62,8 +66,12 @@
     --color-code-operator: var(--code-operator);
     --color-code-property: var(--code-property);
 
+    --color-measure-track: var(--measure-track);
+    --color-measure-other: var(--measure-other);
+
     --color-sidebar: var(--sidebar);
     --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-muted: var(--sidebar-muted);
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
     --color-sidebar-accent: var(--sidebar-accent);
@@ -113,14 +121,29 @@
     --code-operator: oklch(0.48 0.05 55);
     --code-property: oklch(0.46 0.09 285);
 
-    --sidebar: oklch(0.972 0.008 82);
-    --sidebar-foreground: oklch(0.24 0.018 60);
-    --sidebar-primary: oklch(0.74 0.135 78);
-    --sidebar-primary-foreground: oklch(0.21 0.03 60);
-    --sidebar-accent: oklch(0.93 0.018 82);
-    --sidebar-accent-foreground: oklch(0.26 0.025 60);
-    --sidebar-border: oklch(0.895 0.012 80);
-    --sidebar-ring: oklch(0.74 0.135 78);
+    /*
+     | The granary measure reads as one warm ramp: empty space palest, space
+     | taken by everything else on the volume a step darker, and the gold — the
+     | only part this product is responsible for — on top of it.
+     */
+    --measure-track: oklch(0.945 0.011 82);
+    --measure-other: oklch(0.8 0.018 76);
+
+    /*
+     | The rail is charcoal in both themes, never a tinted copy of the page.
+     | The working sheet is where the light is; the rail is the shaded frame
+     | around it, and staying put through the theme switch is what makes it
+     | read as structure rather than as another panel.
+     */
+    --sidebar: oklch(0.205 0.016 62);
+    --sidebar-foreground: oklch(0.93 0.008 85);
+    --sidebar-muted: oklch(0.66 0.018 78);
+    --sidebar-primary: oklch(0.78 0.14 78);
+    --sidebar-primary-foreground: oklch(0.2 0.025 60);
+    --sidebar-accent: oklch(0.265 0.018 62);
+    --sidebar-accent-foreground: oklch(0.97 0.008 85);
+    --sidebar-border: oklch(0.29 0.016 62);
+    --sidebar-ring: oklch(0.78 0.14 78);
 }
 
 .dark {
@@ -159,13 +182,18 @@
     --code-operator: oklch(0.72 0.045 60);
     --code-property: oklch(0.76 0.09 292);
 
-    --sidebar: oklch(0.162 0.012 62);
+    --measure-track: oklch(0.268 0.016 62);
+    --measure-other: oklch(0.4 0.02 66);
+
+    /* Sunk one step below the sheet so the frame still reads in the dark. */
+    --sidebar: oklch(0.148 0.012 62);
     --sidebar-foreground: oklch(0.93 0.008 85);
+    --sidebar-muted: oklch(0.63 0.018 78);
     --sidebar-primary: oklch(0.78 0.14 78);
     --sidebar-primary-foreground: oklch(0.2 0.025 60);
-    --sidebar-accent: oklch(0.272 0.016 62);
-    --sidebar-accent-foreground: oklch(0.93 0.008 85);
-    --sidebar-border: oklch(0.28 0.016 62);
+    --sidebar-accent: oklch(0.222 0.016 62);
+    --sidebar-accent-foreground: oklch(0.95 0.008 85);
+    --sidebar-border: oklch(0.245 0.016 62);
     --sidebar-ring: oklch(0.78 0.14 78);
 }
 
@@ -196,10 +224,20 @@
 /*
  | The weave.
  |
- | A dero is a woven basket. This lattice is the one decorative motif in the
- | product, used behind the landing hero and nowhere else — the over/under
- | rhythm of the basketwork, rendered as two crossed repeating gradients so it
- | costs no image request and scales with the viewport.
+ | A dero is a woven basket. This lattice — the over/under rhythm of the
+ | basketwork, rendered as two crossed repeating gradients so it costs no image
+ | request and scales with whatever it sits in — appears in exactly three
+ | places, and each one is load-bearing:
+ |
+ |   .dero-weave       behind the landing hero
+ |   .dero-weave-rail  the head of the nav rail, marking where the product signs
+ |                     its name
+ |   .dero-weave-fill  inside the filled portion of the capacity measure, so the
+ |                     part of the granary that holds grain is the part that is
+ |                     visibly woven
+ |
+ | Nowhere else. The moment it becomes a background texture it stops meaning
+ | anything.
  */
 .dero-weave {
     background-image:
@@ -214,6 +252,42 @@
             transparent 1px 14px
         );
     mask-image: radial-gradient(120% 90% at 82% 12%, #000 0%, transparent 68%);
+}
+
+.dero-weave-rail {
+    background-image:
+        repeating-linear-gradient(
+            68deg,
+            color-mix(in oklch, var(--sidebar-primary) 20%, transparent) 0 1px,
+            transparent 1px 12px
+        ),
+        repeating-linear-gradient(
+            -68deg,
+            color-mix(in oklch, var(--sidebar-foreground) 8%, transparent) 0 1px,
+            transparent 1px 12px
+        );
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+}
+
+/*
+ | Tighter pitch than the hero weave: this one has to read inside a bar a
+ | couple of characters tall, so the lattice is scaled to its container rather
+ | than reused at hero size and lost.
+ */
+.dero-weave-fill {
+    background-image:
+        repeating-linear-gradient(
+            68deg,
+            color-mix(in oklch, var(--primary-foreground) 26%, transparent) 0
+                1px,
+            transparent 1px 7px
+        ),
+        repeating-linear-gradient(
+            -68deg,
+            color-mix(in oklch, var(--primary-foreground) 16%, transparent) 0
+                1px,
+            transparent 1px 7px
+        );
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,21 +1,8 @@
-import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import type { AppVariant } from '@/types';
 
-type Props = {
-    children: ReactNode;
-    variant?: AppVariant;
-};
-
-export function AppShell({ children, variant = 'sidebar' }: Props) {
-    const isOpen = usePage().props.sidebarOpen;
-
-    if (variant === 'header') {
-        return (
-            <div className="flex min-h-screen w-full flex-col">{children}</div>
-        );
-    }
-
-    return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
+/**
+ * The outer frame for the header layout. The rail layout builds its own shell.
+ */
+export function AppShell({ children }: { children: ReactNode }) {
+    return <div className="flex min-h-screen w-full flex-col">{children}</div>;
 }

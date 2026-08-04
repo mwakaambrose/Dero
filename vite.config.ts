@@ -18,6 +18,11 @@ export default defineConfig({
                 bunny('Fraunces', {
                     weights: [400, 500, 600, 700],
                 }),
+                // Object keys, byte counts and audit lines are machine text and
+                // are set as such — the app's third voice, after display and body.
+                bunny('IBM Plex Mono', {
+                    weights: [400, 500],
+                }),
             ],
         }),
         inertia(),

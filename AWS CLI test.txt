@@ -1,0 +1,19 @@
+cd /Users/mwakaambrose/Code/Dero
+export AWS_ACCESS_KEY_ID=DEROXE75ZSKKRMYLE8CF
+export AWS_SECRET_ACCESS_KEY="$(php artisan tinker --execute 'echo App\Models\AccessKey::where("access_key_id","DEROXE75ZSKKRMYLE8CF")->first()->secret_key;' 2>/dev/null | tail -1)"
+export AWS_DEFAULT_REGION=us-east-1 AWS_EC2_METADATA_DISABLED=true
+E=http://s3.dero.test
+
+aws s3 cp s3://photos/landing.png /tmp/landing-out.png --endpoint-url $E --quiet
+cmp ./landing.png /tmp/landing-out.png && echo "round-trip: byte-identical ($(wc -c < ./landing.png) bytes)"
+
+echo "== presigned URL, fetched with no credentials =="
+U=$(aws s3 presign s3://photos/landing.png --expires-in 300 --endpoint-url $E)
+env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY curl -s -o /tmp/presigned.png -w "  status=%{http_code} bytes=%{size_download} type=%{content_type}\n" "$U"
+
+echo "== activity log =="
+php artisan tinker --execute '
+foreach (App\Models\AuditLog::latest("id")->limit(5)->get() as $l) {
+    echo str_pad($l->action, 22).str_pad($l->result, 9).($l->object_key ?? "-")."\n";
+}' 2>&1 | tail -6
+rm -f /tmp/landing-out.png /tmp/presigned.png

@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { Check, ChevronsUpDown, Plus, Users } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import CreateTeamModal from '@/components/create-team-modal';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,21 +10,61 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { switchMethod } from '@/routes/teams';
 import type { Team } from '@/types';
 
-type TeamSwitcherProps = {
-    inHeader?: boolean;
-};
+/**
+ * The contents of the team menu, without a trigger.
+ *
+ * Split out so the rail and the header can each present the switcher in their
+ * own language while the switching itself lives in one place.
+ */
+export function TeamMenuItems() {
+    const currentTeam = usePage().props.currentTeam;
+    const teams = usePage().props.teams ?? [];
+    const switchTeam = useSwitchTeam();
 
-export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
-    const page = usePage();
-    const isMobile = useIsMobile();
-    const currentTeam = page.props.currentTeam;
-    const teams = page.props.teams ?? [];
+    return (
+        <>
+            <DropdownMenuLabel className="font-mono text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+                Teams
+            </DropdownMenuLabel>
+            {teams.map((team) => (
+                <DropdownMenuItem
+                    key={team.id}
+                    data-test="team-switcher-item"
+                    className="cursor-pointer gap-2"
+                    onSelect={() => switchTeam(team)}
+                >
+                    {team.name}
+                    {currentTeam?.id === team.id && (
+                        <Check className="ml-auto size-4 text-primary" />
+                    )}
+                </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <CreateTeamModal>
+                <DropdownMenuItem
+                    data-test="team-switcher-new-team"
+                    className="cursor-pointer gap-2"
+                    onSelect={(event) => event.preventDefault()}
+                >
+                    <Plus className="size-4" />
+                    <span className="text-muted-foreground">New team</span>
+                </DropdownMenuItem>
+            </CreateTeamModal>
+        </>
+    );
+}
 
-    const switchTeam = (team: Team) => {
+/**
+ * Switching teams keeps you on the page you were reading, with the slug in the
+ * URL swapped, rather than dropping you back at the overview.
+ */
+function useSwitchTeam(): (team: Team) => void {
+    const currentTeam = usePage().props.currentTeam;
+
+    return (team: Team) => {
         const previousTeamSlug = currentTeam?.slug;
 
         router.visit(switchMethod(team.slug), {
@@ -50,6 +90,14 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
             },
         });
     };
+}
+
+/**
+ * The compact switcher used by the header layout. The rail builds its own
+ * trigger and reuses {@link TeamMenuItems}.
+ */
+export function TeamSwitcher() {
+    const currentTeam = usePage().props.currentTeam;
 
     return (
         <DropdownMenu>
@@ -57,96 +105,16 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
                 <Button
                     variant="ghost"
                     data-test="team-switcher-trigger"
-                    className={
-                        inHeader
-                            ? 'h-8 gap-1 px-2'
-                            : 'w-full justify-start px-2 has-[>svg]:px-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
-                    }
+                    className="h-8 gap-1 px-2"
                 >
-                    <Users
-                        className={
-                            inHeader
-                                ? 'hidden'
-                                : 'hidden size-4 shrink-0 group-data-[collapsible=icon]:block'
-                        }
-                    />
-                    <div
-                        className={
-                            inHeader
-                                ? 'grid flex-1 text-left text-sm leading-tight'
-                                : 'grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden'
-                        }
-                    >
-                        <span
-                            className={
-                                inHeader
-                                    ? 'max-w-[120px] truncate font-medium'
-                                    : 'truncate font-semibold'
-                            }
-                        >
-                            {currentTeam?.name ?? 'Select team'}
-                        </span>
-                    </div>
-                    <ChevronsUpDown
-                        className={
-                            inHeader
-                                ? 'size-4 opacity-50'
-                                : 'ml-auto group-data-[collapsible=icon]:hidden'
-                        }
-                    />
+                    <span className="max-w-30 truncate text-sm font-medium">
+                        {currentTeam?.name ?? 'Select team'}
+                    </span>
+                    <ChevronsUpDown className="size-4 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-                className={
-                    inHeader
-                        ? 'w-56'
-                        : 'w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
-                }
-                side={inHeader ? undefined : isMobile ? 'bottom' : 'right'}
-                align={inHeader ? 'end' : 'start'}
-                sideOffset={inHeader ? undefined : 4}
-            >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    Teams
-                </DropdownMenuLabel>
-                {teams.map((team) => (
-                    <DropdownMenuItem
-                        key={team.id}
-                        data-test="team-switcher-item"
-                        className={
-                            inHeader
-                                ? 'cursor-pointer gap-2'
-                                : 'cursor-pointer gap-2 p-2'
-                        }
-                        onSelect={() => switchTeam(team)}
-                    >
-                        {team.name}
-                        {currentTeam?.id === team.id && (
-                            <Check
-                                className={
-                                    inHeader
-                                        ? 'ml-auto size-4'
-                                        : 'ml-auto h-4 w-4'
-                                }
-                            />
-                        )}
-                    </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <CreateTeamModal>
-                    <DropdownMenuItem
-                        data-test="team-switcher-new-team"
-                        className={
-                            inHeader
-                                ? 'cursor-pointer gap-2'
-                                : 'cursor-pointer gap-2 p-2'
-                        }
-                        onSelect={(event) => event.preventDefault()}
-                    >
-                        <Plus className={inHeader ? 'size-4' : 'h-4 w-4'} />
-                        <span className="text-muted-foreground">New team</span>
-                    </DropdownMenuItem>
-                </CreateTeamModal>
+            <DropdownMenuContent className="w-56" align="end">
+                <TeamMenuItems />
             </DropdownMenuContent>
         </DropdownMenu>
     );

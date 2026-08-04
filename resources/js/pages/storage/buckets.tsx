@@ -1,9 +1,13 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Boxes, ChevronRight, Globe, Lock } from 'lucide-react';
+import { Boxes, ChevronRight, Globe, Lock, Plus } from 'lucide-react';
+import { useState } from 'react';
+import CreateBucketDialog from '@/components/storage/create-bucket-dialog';
 import { EmptyState } from '@/components/storage/empty-state';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { formatBytes, formatDateTime, formatNumber } from '@/lib/format';
 import { browser, buckets as bucketsRoute } from '@/routes/storage';
+import type { VisibilityOption } from '@/types';
 
 type BucketRow = {
     name: string;
@@ -15,32 +19,55 @@ type BucketRow = {
     createdAt: string | null;
 };
 
-export default function Buckets({ buckets }: { buckets: BucketRow[] }) {
+type Props = {
+    buckets: BucketRow[];
+    visibilities: VisibilityOption[];
+    region: string;
+};
+
+export default function Buckets({ buckets, visibilities, region }: Props) {
     const slug = usePage().props.currentTeam?.slug ?? '';
+    const [createOpen, setCreateOpen] = useState(false);
 
     return (
         <>
             <Head title="Buckets" />
 
             <div className="flex flex-col gap-6 p-4 md:p-6">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                        Buckets
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Buckets are created through the S3 API — run{' '}
-                        <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">
-                            aws s3 mb
-                        </code>{' '}
-                        against your endpoint.
-                    </p>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Buckets
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Create one here, or from your S3 client with{' '}
+                            <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs">
+                                aws s3 mb
+                            </code>
+                            .
+                        </p>
+                    </div>
+
+                    <Button
+                        data-test="bucket-create"
+                        onClick={() => setCreateOpen(true)}
+                    >
+                        <Plus className="size-4" />
+                        New bucket
+                    </Button>
                 </div>
 
                 {buckets.length === 0 ? (
                     <EmptyState
                         icon={Boxes}
                         title="No buckets yet"
-                        body="Create your first bucket with the AWS CLI, then it will appear here with its contents."
+                        body="A bucket is where your objects live. Create one and it will appear here with its contents."
+                        action={
+                            <Button onClick={() => setCreateOpen(true)}>
+                                <Plus className="size-4" />
+                                New bucket
+                            </Button>
+                        }
                     />
                 ) : (
                     <div className="overflow-hidden rounded-xl border border-border bg-card">
@@ -125,6 +152,14 @@ export default function Buckets({ buckets }: { buckets: BucketRow[] }) {
                     </div>
                 )}
             </div>
+
+            <CreateBucketDialog
+                teamSlug={slug}
+                region={region}
+                visibilities={visibilities}
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+            />
         </>
     );
 }
