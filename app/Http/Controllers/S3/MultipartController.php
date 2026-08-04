@@ -81,6 +81,8 @@ final class MultipartController extends Controller
             }
         }
 
+        $request->attributes->set('s3.bytes_uploaded', $part->size_bytes);
+
         return new Response('', 200, ['ETag' => '"'.$part->etag.'"']);
     }
 

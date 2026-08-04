@@ -27,4 +27,18 @@ abstract class S3Exception extends RuntimeException
     {
         return [];
     }
+
+    /**
+     * Additional HTTP headers the error response must carry.
+     *
+     * Retry-After on SlowDown is the reason this exists: SDK backoff reads it,
+     * and threading it through the exception keeps the handler free of
+     * per-error special cases.
+     *
+     * @return array<string, string>
+     */
+    public function headers(): array
+    {
+        return [];
+    }
 }

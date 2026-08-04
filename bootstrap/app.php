@@ -5,7 +5,9 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\S3\AssignRequestId;
 use App\Http\Middleware\S3\AuthorizeS3Operation;
 use App\Http\Middleware\S3\CaptureSignedRequest;
+use App\Http\Middleware\S3\EnforceRateLimits;
 use App\Http\Middleware\S3\HandleBucketCors;
+use App\Http\Middleware\S3\RecordS3Activity;
 use App\Http\Middleware\S3\ResolveAccessKey;
 use App\Http\Middleware\S3\ResolveBucket;
 use App\Http\Middleware\S3\VerifyAwsSignature;
@@ -78,6 +80,10 @@ return Application::configure(basePath: dirname(__DIR__))
          */
         $middleware->group('s3', [
             AssignRequestId::class,
+            // Before any database work, so a flood costs a cache read.
+            EnforceRateLimits::class,
+            // Terminable: writes its rows after the response is flushed.
+            RecordS3Activity::class,
             CaptureSignedRequest::class,
             ResolveAccessKey::class,
             VerifyAwsSignature::class,

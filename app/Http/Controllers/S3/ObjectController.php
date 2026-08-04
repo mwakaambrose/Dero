@@ -61,6 +61,10 @@ final class ObjectController extends Controller
             }
         }
 
+        // Published for RecordS3Activity: the measured size, not Content-Length,
+        // which counts aws-chunked framing rather than payload.
+        $request->attributes->set('s3.bytes_uploaded', $object->size_bytes);
+
         return new Response('', 200, ['ETag' => '"'.$object->etag.'"']);
     }
 

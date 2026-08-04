@@ -22,6 +22,7 @@ final class S3ErrorResponse
         return new Response($body, $exception->statusCode(), [
             'Content-Type' => 'application/xml',
             'x-amz-request-id' => $requestId,
+            ...$exception->headers(),
         ]);
     }
 }
