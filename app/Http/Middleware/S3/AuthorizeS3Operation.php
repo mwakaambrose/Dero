@@ -22,7 +22,12 @@ final class AuthorizeS3Operation
         $required = OperationPermission::forRequest($request);
 
         if ($key instanceof AccessKey) {
-            $this->authorizeKey($key, $bucket instanceof Bucket ? $bucket : null, $required);
+            $this->authorizeKey(
+                $key,
+                $bucket instanceof Bucket ? $bucket : null,
+                $required,
+                $this->isCreateBucket($request),
+            );
 
             return $next($request);
         }
@@ -33,13 +38,34 @@ final class AuthorizeS3Operation
     }
 
     /**
+     * A PUT on a bucket path with no object key is CreateBucket.
+     */
+    private function isCreateBucket(Request $request): bool
+    {
+        return $request->isMethod('PUT')
+            && $request->route('bucket') !== null
+            && $request->route('key') === null;
+    }
+
+    /**
      * @throws AccessDeniedException
      */
-    private function authorizeKey(AccessKey $key, ?Bucket $bucket, AccessKeyPermission $required): void
-    {
+    private function authorizeKey(
+        AccessKey $key,
+        ?Bucket $bucket,
+        AccessKeyPermission $required,
+        bool $isCreateBucket,
+    ): void {
         // Tenant isolation, enforced server-side on every request. Never by
         // filtering in a client.
-        if ($bucket !== null && $bucket->team_id !== $key->team_id) {
+        //
+        // CreateBucket is exempt from the ownership check, and only from this
+        // check: AWS answers a name owned by someone else with
+        // BucketAlreadyExists, which clients depend on to distinguish "taken"
+        // from "forbidden". The controller raises that before touching the
+        // bucket, and it discloses exactly what a 403 here would — that the
+        // name is in use — since bucket names are globally unique anyway.
+        if (! $isCreateBucket && $bucket !== null && $bucket->team_id !== $key->team_id) {
             throw new AccessDeniedException;
         }
 

@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\S3\BucketController;
+use App\Http\Controllers\S3\ServiceController;
 use App\S3\Exceptions\MethodNotAllowedException;
+use App\S3\Exceptions\NotImplementedException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,11 +20,34 @@ use Illuminate\Support\Facades\Route;
  | before the object catch-all.
  */
 
+// Service.
+Route::get('/', [ServiceController::class, 'listBuckets']);
+
+// Bucket.
+Route::put('/{bucket}', [BucketController::class, 'create']);
+Route::delete('/{bucket}', [BucketController::class, 'delete']);
+
 /*
- | Placeholder bucket route so ResolveBucket has a {bucket} parameter to work
- | with. Replaced by the real service and bucket operations in a later task.
+ | GET and HEAD on a bucket share one route.
+ |
+ | They cannot be separated: Laravel's Route constructor appends HEAD to any
+ | route declaring GET, and a later registration for the same method and URI
+ | replaces the earlier one — so a standalone HEAD route is always overwritten
+ | by the GET route and HeadBucket would silently fall through to ListObjects.
+ |
+ | GET itself selects between operations by query parameter, because S3 uses
+ | valueless parameters ("?location", "?uploads") as sub-resource markers.
  */
-Route::match(['GET', 'HEAD', 'PUT', 'DELETE', 'POST'], '/{bucket}', fn () => response('', 200));
+Route::match(['GET', 'HEAD'], '/{bucket}', function (Request $request) {
+    if ($request->isMethod('HEAD')) {
+        return app(BucketController::class)->head($request);
+    }
+
+    return match (true) {
+        $request->query->has('location') => app(BucketController::class)->location($request),
+        default => throw new NotImplementedException('ListObjects'),
+    };
+});
 
 /*
  | Terminal catch-all.
@@ -30,9 +57,6 @@ Route::match(['GET', 'HEAD', 'PUT', 'DELETE', 'POST'], '/{bucket}', fn () => res
  | web.php are not host-constrained — so a fallback here would let
  | "s3.example.com/login" serve the dashboard login page. An explicit catch-all
  | registered ahead of the web group guarantees the S3 host only ever speaks S3.
- |
- | Real operations are declared above this line by later tasks; because Laravel
- | matches in registration order, they take precedence.
  */
 Route::any('/{path?}', function (): never {
     throw new MethodNotAllowedException;
