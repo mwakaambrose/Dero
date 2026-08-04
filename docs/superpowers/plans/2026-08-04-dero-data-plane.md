@@ -808,10 +808,15 @@ final class ObjectPathGenerator
     {
         self::assertSafeIdentifier($ulid);
 
-        // Characters 0-9 of a ULID encode the timestamp and are near-identical
-        // for objects created in the same millisecond. Shard on the random
-        // portion (characters 10 onward) so directories fill evenly.
-        $shard = strtolower(substr($ulid, 10, 6));
+        // Shard on the LAST six characters.
+        //
+        // Characters 0-9 encode the timestamp, so they are identical for
+        // objects created in the same millisecond. The high-order random
+        // characters are no better: Laravel's ULID factory is monotonic, so
+        // within a millisecond it increments the random component rather than
+        // regenerating it. Only the trailing characters vary on every
+        // increment, and they are also fully random across milliseconds.
+        $shard = strtolower(substr($ulid, -6));
 
         return sprintf(
             'objects/%s/%s/%s/%s',
