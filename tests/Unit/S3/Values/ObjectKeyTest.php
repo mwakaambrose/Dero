@@ -40,11 +40,19 @@ it('rejects keys containing a null byte', function () {
     ObjectKey::fromString("valid\0key");
 })->throws(InvalidArgumentException::class);
 
-it('hashes to 32 raw bytes and matches sha256 of the raw key', function () {
+it('hashes to a 64-character hex sha256 of the raw key', function () {
     $key = ObjectKey::fromString('a/b/c.txt');
 
-    expect(strlen($key->hash()))->toBe(32)
-        ->and($key->hashHex())->toBe(hash('sha256', 'a/b/c.txt'));
+    // Hex rather than raw binary: binding 32 raw bytes as a string parameter
+    // mangles them, so distinct keys collide on the unique index.
+    expect($key->hash())->toBe(hash('sha256', 'a/b/c.txt'))
+        ->and(strlen($key->hash()))->toBe(64);
+});
+
+it('produces a hash containing no bytes that a string binding could truncate', function () {
+    foreach (['a.txt', "key\x01with\x02control", 'Ω/unicode.txt'] as $value) {
+        expect(ObjectKey::fromString($value)->hash())->toMatch('/^[0-9a-f]{64}$/');
+    }
 });
 
 it('produces different hashes for different keys', function () {

@@ -20,7 +20,7 @@ final class BucketController extends Controller
     /**
      * PUT /{bucket} — CreateBucket.
      */
-    public function create(Request $request, string $bucket): Response
+    public function create(Request $request): Response
     {
         $key = $request->attributes->get('s3.access_key');
 
@@ -28,9 +28,14 @@ final class BucketController extends Controller
             throw new AccessDeniedException;
         }
 
+        // Route parameters are read explicitly rather than taken as method
+        // arguments: Laravel injects them positionally, not by name, and the
+        // two addressing styles declare different parameter lists.
+        $bucket = $request->route('bucket');
+
         // Validated before touching the database, so an invalid name reports
         // InvalidBucketName rather than a constraint violation.
-        $name = BucketName::fromString($bucket);
+        $name = BucketName::fromString(\is_string($bucket) ? $bucket : '');
 
         $existing = Bucket::query()->where('name', $name->value)->first();
 

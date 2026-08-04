@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\S3\Http;
 
 use App\Http\Controllers\S3\BucketController;
+use App\Http\Controllers\S3\ObjectController;
 use App\Http\Controllers\S3\ObjectListController;
 use App\Http\Controllers\S3\ServiceController;
 use App\S3\Exceptions\MethodNotAllowedException;
@@ -64,6 +65,12 @@ final class S3Routes
                 default => app(ObjectListController::class)->list($request),
             };
         });
+
+        $objectUri = $virtualHost ? '/{key}' : '/{bucket}/{key}';
+
+        // where('key', '.*') is required: without it Laravel stops the
+        // parameter at the first slash and "photos/2026/q1.pdf" never routes.
+        Route::put($objectUri, [ObjectController::class, 'put'])->where('key', '.*');
 
         /*
          | Terminal catch-all.

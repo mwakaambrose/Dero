@@ -96,7 +96,13 @@ final class SignsRequests
         foreach ($headers as $name => $value) {
             $name = strtoupper(str_replace('-', '_', $name));
 
-            $server[str_starts_with($name, 'HTTP_') ? $name : 'HTTP_'.$name] = $value;
+            // CONTENT_TYPE and CONTENT_LENGTH carry no HTTP_ prefix under the
+            // CGI convention, and Symfony reads them only from the unprefixed
+            // names. Prefixing them means the header never arrives — and since
+            // Symfony then substitutes its own default Content-Type, a request
+            // that signed one value is verified against another and fails with
+            // an unexplained SignatureDoesNotMatch.
+            $server[\in_array($name, ['CONTENT_TYPE', 'CONTENT_LENGTH'], true) ? $name : 'HTTP_'.$name] = $value;
         }
 
         return $server;

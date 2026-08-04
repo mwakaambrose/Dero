@@ -43,7 +43,7 @@ return new class extends Migration
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
 
             $table->text('key');
-            $table->binary('key_hash', 32);
+            $table->string('key_hash', 64);
 
             $table->string('storage_path');
             $table->unsignedBigInteger('size_bytes');
@@ -74,7 +74,7 @@ return new class extends Migration
             $table->foreignUlid('bucket_id')->constrained('buckets')->cascadeOnDelete();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
             $table->text('key');
-            $table->binary('key_hash', 32);
+            $table->string('key_hash', 64);
             $table->string('content_type')->default('binary/octet-stream');
             $table->string('content_encoding')->nullable();
             $table->string('content_disposition')->nullable();
@@ -95,7 +95,7 @@ return new class extends Migration
             $table->unsignedInteger('part_number');
             $table->unsignedBigInteger('size_bytes');
             $table->string('etag', 64);
-            $table->binary('checksum_md5', 16);
+            $table->string('checksum_md5', 32);
             $table->string('storage_path');
             $table->timestamps();
 

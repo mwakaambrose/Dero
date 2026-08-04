@@ -34,15 +34,14 @@ final readonly class ObjectKey
     }
 
     /**
-     * Raw 32-byte SHA-256 of the key, used for the unique index and point
-     * lookups. Binary rather than hex so the index stays 32 bytes wide.
+     * Hex SHA-256 of the key, used for the unique index and point lookups.
+     *
+     * Hex rather than the raw 32 bytes: binding raw binary as a string
+     * parameter mangles it — SQLite stops at the first null byte — so distinct
+     * keys collide on the unique index and silently overwrite each other. The
+     * 64-character column is still well inside every index limit.
      */
     public function hash(): string
-    {
-        return hash('sha256', $this->value, binary: true);
-    }
-
-    public function hashHex(): string
     {
         return hash('sha256', $this->value);
     }
