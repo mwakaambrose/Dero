@@ -220,6 +220,22 @@ it('never exposes the raw token as a field', function () {
     expect(ShareLink::query()->first()->toArray())->not->toHaveKey('token');
 });
 
+it('puts the new link where the page actually reads it', function () {
+    // Flashed data lands on the page, not among its props, and assertInertia
+    // only sees props. Asserting the session alone passes even when the panel
+    // reads the wrong path and shows nothing — which is exactly what happened.
+    createShare()->assertRedirect();
+
+    $page = $this->actingAs($this->user)
+        ->get('/harvest/buckets/photos')
+        ->assertOk()
+        ->viewData('page');
+
+    expect($page['flash']['objectLink']['key'])->toBe('cat.jpg')
+        ->and($page['flash']['objectLink']['url'])->toContain('/shared/')
+        ->and($page['flash']['objectLink']['expiresAt'])->toBeNull();
+});
+
 it('reserves the shared prefix as a team slug', function () {
     $this->actingAs($this->user)
         ->post('/settings/teams', ['name' => 'shared'])

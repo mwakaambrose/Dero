@@ -17,5 +17,21 @@ declare module '@inertiajs/core' {
             teams: Team[];
             [key: string]: unknown;
         };
+
+        /**
+         * Inertia::flash() data.
+         *
+         * It arrives on the page object, NOT among the props — read it as
+         * usePage().flash, since usePage().props.flash is always undefined.
+         */
+        flashDataType: {
+            toast?: { type: 'success' | 'error'; message: string };
+            newAccessKey?: { accessKeyId: string; secretKey: string };
+            objectLink?: {
+                key: string;
+                url: string;
+                expiresAt: string | null;
+            };
+        };
     }
 }

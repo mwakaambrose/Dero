@@ -96,20 +96,31 @@ it('searches across the whole bucket', function () {
 });
 
 it('shows a secret exactly once when a key is created', function () {
-    $response = $this->actingAs($this->user)->post('/harvest/access-keys', [
+    $this->actingAs($this->user)->post('/harvest/access-keys', [
         'name' => 'CI runner',
         'permissions' => ['read', 'list'],
-    ]);
-
-    $response->assertRedirect();
+    ])->assertRedirect();
 
     expect(AccessKey::query()->where('name', 'CI runner')->exists())->toBeTrue();
 
-    // The secret never appears in a subsequent page load.
-    $this->actingAs($this->user)
+    // Delivered on the next load, on the page rather than among its props —
+    // which is where the dialog reads it from. Asserting only that a secret was
+    // generated would pass while the dialog showed nothing, and did.
+    $page = $this->actingAs($this->user)
         ->get('/harvest/access-keys')
         ->assertOk()
-        ->assertDontSee('secret_key');
+        ->viewData('page');
+
+    expect($page['flash']['newAccessKey']['secretKey'])->toBeString()->not->toBeEmpty()
+        ->and($page['flash']['newAccessKey']['accessKeyId'])->toStartWith('DERO');
+
+    // And exactly once: the flash is spent, so a reload cannot show it again.
+    $reload = $this->actingAs($this->user)
+        ->get('/harvest/access-keys')
+        ->assertOk()
+        ->viewData('page');
+
+    expect($reload)->not->toHaveKey('flash');
 });
 
 it('revokes a key', function () {

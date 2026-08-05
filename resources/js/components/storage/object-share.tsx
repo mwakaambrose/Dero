@@ -103,8 +103,9 @@ export function ObjectShare({
     shareLinks,
 }: Props) {
     const page = usePage();
-    const flashed = page.props.objectLink as
-        { key: string; url: string; expiresAt: string | null } | undefined;
+    // On the page, not among its props. page.props.objectLink is always
+    // undefined, which is a silent nothing rather than an error.
+    const flashed = page.flash?.objectLink;
 
     // Share links are stored, so they are listed for the object being viewed;
     // presigned URLs are not stored and cannot be listed at all.

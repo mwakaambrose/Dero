@@ -89,8 +89,9 @@ export default function AccessKeys({
 }: Props) {
     const page = usePage();
     const slug = page.props.currentTeam?.slug ?? '';
-    const newKey = page.props.newAccessKey as
-        { accessKeyId: string; secretKey: string } | undefined;
+    // On the page, not among its props. page.props.newAccessKey is always
+    // undefined, which is a silent nothing rather than an error.
+    const newKey = page.flash?.newAccessKey;
 
     const [creating, setCreating] = useState(false);
 
