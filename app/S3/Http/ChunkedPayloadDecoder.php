@@ -77,7 +77,20 @@ final class ChunkedPayloadDecoder
              */
             if ($length === 0) {
 
+                // consume CRLF after:
+                // 0;chunk-signature=xxxx\r\n
+
+                $separator = fread($input, 2);
+
+                if ($separator !== "\r\n") {
+                    throw new InvalidRequestException(
+                        'Invalid terminating chunk.'
+                    );
+                }
+
+
                 self::consumeTrailers($input);
+
 
                 return $decoded;
             }
@@ -157,17 +170,23 @@ final class ChunkedPayloadDecoder
 
 
             if ($line === null) {
-
                 throw new InvalidRequestException(
-                    'Truncated aws-chunked terminating payload.'
+                    'Truncated aws-chunked trailer.'
                 );
             }
 
 
-            // Empty line terminates trailers.
+            // Empty line terminates trailer section
             if ($line === '') {
                 return;
             }
+
+
+            // Example:
+            //
+            // x-amz-checksum-crc64nvme: abcdef
+            //
+            // Currently ignored.
         }
     }
 
