@@ -31,13 +31,9 @@ final class ChunkedPayloadDecoder
 
     public static function isChunked(string $payloadHash): bool
     {
-        return in_array(
+        return str_starts_with(
             strtoupper($payloadHash),
-            [
-                'STREAMING-AWS4-HMAC-SHA256-PAYLOAD',
-                'STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER',
-            ],
-            true
+            'STREAMING-'
         );
     }
 
@@ -152,7 +148,6 @@ final class ChunkedPayloadDecoder
             }
         }
     }
-
 
     private static function consumeTrailers(mixed $input): void
     {
