@@ -97,6 +97,18 @@ final class ChunkedPayloadDecoder
                     min(self::READ_SIZE, $remaining)
                 );
 
+                if ($chunk === false || $chunk === '') {
+
+                    logger()->error('AWS CHUNK EOF', [
+                        'expected_remaining' => $remaining,
+                        'stream_meta' => stream_get_meta_data($input),
+                    ]);
+
+                    throw new InvalidRequestException(
+                        'Truncated chunked payload.'
+                    );
+                }
+
 
                 if ($chunk === false || $chunk === '') {
 
@@ -104,7 +116,6 @@ final class ChunkedPayloadDecoder
                         'Truncated chunked payload.'
                     );
                 }
-
 
                 $written = fwrite($output, $chunk);
 
