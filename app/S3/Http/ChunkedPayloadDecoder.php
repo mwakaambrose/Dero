@@ -52,6 +52,15 @@ final class ChunkedPayloadDecoder
 
         $decoded = 0;
 
+        $peek = fread($input, 512);
+
+        logger()->info('AWS RAW BODY PREFIX', [
+            'length' => strlen($peek),
+            'hex' => bin2hex($peek),
+            'text' => $peek,
+        ]);
+
+        rewind($input);
 
         while (true) {
 
