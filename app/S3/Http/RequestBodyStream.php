@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\S3\Http;
 
 use Illuminate\Http\Request;
-use LogicException;
 use RuntimeException;
 
 final class RequestBodyStream
@@ -22,8 +21,7 @@ final class RequestBodyStream
      */
     public static function open(Request $request): mixed
     {
-        $input = self::rawStream($request);
-
+        $input = self::rawStream();
 
         $payloadHash = strtoupper(
             (string) $request->headers->get(
@@ -32,7 +30,6 @@ final class RequestBodyStream
             )
         );
 
-
         $contentEncoding = strtolower(
             (string) $request->headers->get(
                 'Content-Encoding',
@@ -40,108 +37,64 @@ final class RequestBodyStream
             )
         );
 
-
         $awsChunked =
             ChunkedPayloadDecoder::isChunked($payloadHash)
             ||
-            str_contains(
-                $contentEncoding,
-                'aws-chunked'
-            );
+            str_contains($contentEncoding, 'aws-chunked');
 
-
-        if (!$awsChunked) {
+        if (! $awsChunked) {
             return $input;
         }
-
 
         $decoded = fopen(
             'php://temp/maxmemory:8388608',
             'r+b'
         );
 
-
         if ($decoded === false) {
-
             throw new RuntimeException(
                 'Unable to create decoded stream.'
             );
         }
-
 
         ChunkedPayloadDecoder::decodeTo(
             $input,
             $decoded
         );
 
-
         rewind($decoded);
 
-
         fclose($input);
-
 
         return $decoded;
     }
 
 
     /**
+     * Open the untouched HTTP request body.
+     *
+     * IMPORTANT:
+     * Do not use Request::getContent() here.
+     *
+     * AWS streaming uploads use:
+     *
+     * Transfer-Encoding: chunked
+     * Content-Encoding: aws-chunked
+     *
+     * and the body must be consumed exactly once from php://input.
+     *
      * @return resource
      */
-    private static function rawStream(Request $request): mixed
+    private static function rawStream(): mixed
     {
-        try {
+        $input = fopen('php://input', 'rb');
 
-            $input = $request->getContent(
-                asResource: true
-            );
-
-        } catch (LogicException) {
-
-            return self::streamFromString(
-                $request->getContent()
-            );
-        }
-
-
-        return is_resource($input)
-            ? $input
-            : self::streamFromString(
-                $request->getContent()
-            );
-    }
-
-
-    /**
-     * @return resource
-     */
-    private static function streamFromString(
-        string $contents
-    ): mixed {
-
-        $stream = fopen(
-            'php://temp/maxmemory:8388608',
-            'r+b'
-        );
-
-
-        if ($stream === false) {
-
+        if ($input === false) {
             throw new RuntimeException(
-                'Unable to create request stream.'
+                'Unable to open request body stream.'
             );
         }
 
-
-        fwrite(
-            $stream,
-            $contents
-        );
-
-
-        rewind($stream);
-
-
-        return $stream;
+        return $input;
     }
 }
