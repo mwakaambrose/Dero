@@ -258,8 +258,20 @@ final class LocalFilesystemBackend implements ObjectStorageBackend
 
     private function ensureDirectory(string $directory): void
     {
-        if (! is_dir($directory) && ! mkdir($directory, 0o750, recursive: true) && ! is_dir($directory)) {
-            throw new RuntimeException("Unable to create directory {$directory}.");
+        if (is_dir($directory)) {
+            return;
         }
+
+        // Multiple dashboard uploads can create the same shard directories at
+        // once. mkdir() may return false and emit "File exists" in that race,
+        // even though the directory is usable by the time it returns. The
+        // warning must not become an ErrorException before the final is_dir()
+        // check gets a chance to establish that. A genuine failure still gets
+        // a useful application exception below.
+        if (@mkdir($directory, 0o750, recursive: true) || is_dir($directory)) {
+            return;
+        }
+
+        throw new RuntimeException("Unable to create directory {$directory}.");
     }
 }

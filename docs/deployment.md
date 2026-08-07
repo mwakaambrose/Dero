@@ -375,6 +375,7 @@ memory.
 | S3 host serves the dashboard | Both hostnames resolve to the same server block. Check `server_name` |
 | `SignatureDoesNotMatch` on every request | Server clock drift, or a proxy rewriting headers. Check `timedatectl` first |
 | Uploads truncate silently | `client_max_body_size`, `post_max_size` and `S3_MAX_UPLOAD_SIZE` disagree |
+| Dashboard upload returns 500 with `mkdir(): Permission denied` | The PHP-FPM pools run as `dero`, but `STORAGE_ROOT` is missing or not writable by that user. Create it and repair its ownership, then verify with the `sudo -u dero test -w` command below |
 | Large uploads are slow and disk I/O doubles | `fastcgi_request_buffering` is on |
 | `aws s3 presign` URLs return `AccessDenied` | The client presigned with SigV2. Set `signature_version = s3v4` |
 | Disk fills with `uploads/` directories | The scheduler is not running. `systemctl status dero-scheduler.timer` |
@@ -382,6 +383,27 @@ memory.
 
 Logs: `journalctl -u dero-queue -f`, `/var/log/nginx/dero-s3.error.log`, and
 `storage/logs/laravel.log`.
+
+### Repairing storage permissions
+
+The dashboard upload and the S3 API both write object bytes as the `dero` Unix
+user. A bucket can resolve successfully while an upload still fails if the
+configured root was created by `root` during deployment:
+
+```bash
+cd /var/www/dero
+grep '^STORAGE_ROOT=' .env
+sudo mkdir -p /srv/dero-storage
+sudo chown -R dero:dero /srv/dero-storage
+sudo chmod 750 /srv/dero-storage
+sudo -u dero test -w /srv/dero-storage
+```
+
+Replace `/srv/dero-storage` with the exact value of `STORAGE_ROOT`. The last
+command must produce no output and exit successfully. If `STORAGE_ROOT` is not
+set, Dero defaults to `/var/www/dero/storage/dero`; repair that directory
+instead, or set `STORAGE_ROOT=/srv/dero-storage` in `.env` and run
+`php artisan optimize:clear` before retrying the upload.
 
 ---
 
