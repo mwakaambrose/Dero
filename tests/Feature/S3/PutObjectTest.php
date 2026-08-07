@@ -191,6 +191,26 @@ it('decodes an aws-chunked body', function () {
         ->and($object->etag)->toBe(md5($payload));
 });
 
+it('decodes the current AWS CLI unsigned checksum-trailer body', function () {
+    $payload = 'current-cli-trailer';
+    $body = dechex(strlen($payload))."\r\n".$payload."\r\n"
+        ."0\r\n"
+        .'x-amz-checksum-crc64nvme: aL8C43O0VJE='."\r\n"
+        .'x-amz-trailer-signature: '.str_repeat('a', 64)."\r\n\r\n";
+
+    $response = putObject('current-cli.txt', $body, [
+        'x-amz-content-sha256' => 'STREAMING-UNSIGNED-PAYLOAD-TRAILER',
+        'x-amz-decoded-content-length' => (string) strlen($payload),
+        'x-amz-sdk-checksum-algorithm' => 'CRC64NVME',
+        'x-amz-trailer' => 'x-amz-checksum-crc64nvme',
+        'content-encoding' => 'aws-chunked',
+    ]);
+
+    $response->assertOk();
+
+    expect(S3Object::query()->sole()->size_bytes)->toBe(strlen($payload));
+});
+
 it('does not persist aws-chunked as the object content encoding', function () {
     $payload = 'x';
     $body = dechex(\strlen($payload)).';chunk-signature='.str_repeat('a', 64)."\r\n".$payload."\r\n"

@@ -81,6 +81,7 @@ migration applies — see [architecture.md](architecture.md#the-two-mysql-constr
 | SigV4, `Authorization` header | Verified | AWS CLI, boto3 and curl `--aws-sigv4` |
 | SigV4, presigned query | Verified | Fetched with no credentials at all |
 | `aws-chunked` payload framing | Verified | `STREAMING-AWS4-HMAC-SHA256-PAYLOAD` |
+| Unsigned checksum trailers | Implemented with limitation | `STREAMING-UNSIGNED-PAYLOAD-TRAILER` is decoded and the trailer is consumed, but the checksum is not cryptographically validated. |
 | `UNSIGNED-PAYLOAD` | Verified | |
 | Payload digest verification | Untested | A body that does not match the signed `x-amz-content-sha256` is rejected with `XAmzContentSHA256Mismatch`; Pest only |
 | Clock skew rejection | Untested | ±900 s by default; Pest only |
@@ -123,6 +124,15 @@ framing is decoded and each chunk's declared length is honoured; the
 signature over the whole payload declaration is verified, so an attacker cannot
 substitute a body — but a per-chunk forgery within an already-authenticated
 request would not be detected.
+
+**Checksum trailers are consumed but not cryptographically validated.** Current
+AWS CLI v2 releases calculate and send request checksums by default; CRC64NVME
+is the default algorithm. Dero accepts the modern
+`STREAMING-UNSIGNED-PAYLOAD-TRAILER` form, consumes the checksum trailer, and
+stores the decoded object, but does not currently verify the trailer value
+against the received bytes. This is a compatibility feature, not an integrity
+guarantee. Clients requiring server-side checksum validation should use the
+current checksum-disabled workaround until checksum verification is implemented.
 
 **Cross-tenant access returns `AccessDenied` where AWS returns `NoSuchBucket`.**
 Deliberate: a distinct answer for "exists but is not yours" would turn the status

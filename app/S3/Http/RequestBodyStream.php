@@ -60,7 +60,8 @@ final class RequestBodyStream
 
         ChunkedPayloadDecoder::decodeTo(
             $input,
-            $decoded
+            $decoded,
+            payloadHash: $payloadHash,
         );
 
         rewind($decoded);

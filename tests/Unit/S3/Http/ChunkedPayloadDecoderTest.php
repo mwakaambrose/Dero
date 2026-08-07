@@ -39,6 +39,15 @@ function splitHttpChunkedBody(string $body, int $size): string
     return $wire."0\r\n\r\n";
 }
 
+function unsignedTrailerBody(string $payload): string
+{
+    return dechex(strlen($payload))."\r\n"
+        .$payload."\r\n"
+        ."0\r\n"
+        .'x-amz-checksum-crc64nvme: aL8C43O0VJE='."\r\n"
+        .'x-amz-trailer-signature: '.str_repeat('a', 64)."\r\n\r\n";
+}
+
 /**
  * @return resource
  */
@@ -100,6 +109,34 @@ it('strips an outer layer whose boundaries split AWS framing', function () {
     rewind($output);
 
     expect(stream_get_contents($output))->toBe('split-header'.str_repeat('x', 32));
+});
+
+it('decodes unsigned AWS chunks with trailing checksum headers', function () {
+    $output = outputStream();
+
+    ChunkedPayloadDecoder::decodeTo(
+        chunkStream(unsignedTrailerBody('unsigned-trailer')),
+        $output,
+        payloadHash: 'STREAMING-UNSIGNED-PAYLOAD-TRAILER',
+    );
+
+    rewind($output);
+
+    expect(stream_get_contents($output))->toBe('unsigned-trailer');
+});
+
+it('decodes unsigned AWS chunks wrapped in HTTP chunking', function () {
+    $output = outputStream();
+
+    ChunkedPayloadDecoder::decodeTo(
+        chunkStream(httpChunkedBody(unsignedTrailerBody('wrapped-unsigned'))),
+        $output,
+        payloadHash: 'STREAMING-UNSIGNED-PAYLOAD-TRAILER',
+    );
+
+    rewind($output);
+
+    expect(stream_get_contents($output))->toBe('wrapped-unsigned');
 });
 
 it('reassembles multiple chunks in order', function () {

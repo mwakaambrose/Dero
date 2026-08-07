@@ -47,8 +47,14 @@ final class ChunkedPayloadDecoder
     public static function decodeTo(
         mixed $input,
         mixed $output,
-        ?callable $onChunk = null
+        ?callable $onChunk = null,
+        string $payloadHash = self::PAYLOAD_HASH,
     ): int {
+
+        $requireChunkSignatures = ! str_starts_with(
+            strtoupper($payloadHash),
+            'STREAMING-UNSIGNED-'
+        );
 
         $raw = fopen('php://temp/maxmemory:8388608', 'r+b');
 
@@ -77,7 +83,11 @@ final class ChunkedPayloadDecoder
         rewind($raw);
 
         try {
-            return self::decodeFromStream($raw, $output, $onChunk);
+            if (self::looksLikeOuterHttpChunked($raw)) {
+                return self::decodeOuterHttpThenAws($raw, $output, $onChunk, $requireChunkSignatures);
+            }
+
+            return self::decodeFromStream($raw, $output, $onChunk, $requireChunkSignatures);
         } catch (InvalidRequestException $directFailure) {
             // The direct parse may have consumed an outer HTTP chunk layer as
             // though it were AWS framing. Retry from the untouched raw stream
@@ -87,7 +97,7 @@ final class ChunkedPayloadDecoder
             rewind($output);
 
             try {
-                return self::decodeOuterHttpThenAws($raw, $output, $onChunk);
+                return self::decodeOuterHttpThenAws($raw, $output, $onChunk, $requireChunkSignatures);
             } catch (InvalidRequestException) {
                 throw $directFailure;
             } finally {
@@ -109,7 +119,8 @@ final class ChunkedPayloadDecoder
     private static function decodeFromStream(
         mixed $input,
         mixed $output,
-        ?callable $onChunk = null
+        ?callable $onChunk = null,
+        bool $requireChunkSignatures = true,
     ): int {
 
         $decoded = 0;
@@ -122,56 +133,11 @@ final class ChunkedPayloadDecoder
             );
         }
 
-        // Some FastCGI/Nginx deployments expose the outer HTTP
-        // Transfer-Encoding: chunked layer to PHP. Strip that layer before
-        // parsing the inner AWS aws-chunked framing. The temporary stream is
-        // disk-backed after its memory threshold, so this does not put the
-        // object on the PHP heap.
-        if (self::isHttpChunkHeader($firstHeader)) {
-            $inner = fopen('php://temp/maxmemory:8388608', 'r+b');
-
-            if ($inner === false) {
-                throw new InvalidRequestException(
-                    'Unable to create decoded payload stream.'
-                );
-            }
-
-            self::copyHttpChunk($input, $inner, hexdec(explode(';', $firstHeader, 2)[0]));
-
-            while (true) {
-                $header = self::readHeaderLine($input);
-
-                if ($header === null) {
-                    fclose($inner);
-
-                    throw new InvalidRequestException(
-                        'Truncated HTTP chunked payload.'
-                    );
-                }
-
-                $length = self::parseHttpChunkLength($header);
-
-                if ($length === 0) {
-                    self::consumeTrailers($input);
-
-                    break;
-                }
-
-                self::copyHttpChunk($input, $inner, $length);
-            }
-
-            rewind($inner);
-            $decoded = self::decodeFromStream($inner, $output, $onChunk);
-            fclose($inner);
-
-            return $decoded;
-        }
-
         $header = $firstHeader;
 
         while (true) {
 
-            $length = self::parseChunkLength($header);
+            $length = self::parseChunkLength($header, $requireChunkSignatures);
 
 
             /*
@@ -261,7 +227,8 @@ final class ChunkedPayloadDecoder
     private static function decodeOuterHttpThenAws(
         mixed $input,
         mixed $output,
-        ?callable $onChunk = null
+        ?callable $onChunk = null,
+        bool $requireChunkSignatures = true,
     ): int {
         $header = self::readHeaderLine($input);
 
@@ -294,18 +261,52 @@ final class ChunkedPayloadDecoder
 
             rewind($inner);
 
-            return self::decodeFromStream($inner, $output, $onChunk);
+            return self::decodeFromStream($inner, $output, $onChunk, $requireChunkSignatures);
         } finally {
             fclose($inner);
         }
     }
 
-    private static function isHttpChunkHeader(string $header): bool
+    /**
+     * An unsigned AWS chunk also has a plain hexadecimal header, so checking
+     * only for a missing chunk signature cannot distinguish it from an outer
+     * HTTP chunk. Inspect the first outer chunk's data: it should begin with
+     * the next AWS chunk header.
+     *
+     * @param resource $input
+     */
+    private static function looksLikeOuterHttpChunked(mixed $input): bool
     {
+        $position = ftell($input);
+        $header = self::readHeaderLine($input);
+
+        if ($header === null) {
+            fseek($input, $position);
+
+            return false;
+        }
+
         $hex = explode(';', $header, 2)[0];
 
-        return preg_match('/^[0-9a-fA-F]+$/', $hex) === 1
-            && ! str_contains($header, 'chunk-signature=');
+        if (preg_match('/^[0-9a-fA-F]+$/', $hex) !== 1) {
+            fseek($input, $position);
+
+            return false;
+        }
+
+        $length = hexdec($hex);
+
+        if ($length < 4) {
+            fseek($input, $position);
+
+            return false;
+        }
+
+        $prefix = fread($input, min($length, 512));
+        fseek($input, $position);
+
+        return \is_string($prefix)
+            && preg_match('/^[0-9a-fA-F]+(?:;chunk-signature=[0-9a-fA-F]{64})?\r\n/', $prefix) === 1;
     }
 
     private static function parseHttpChunkLength(string $header): int
@@ -410,7 +411,7 @@ final class ChunkedPayloadDecoder
     }
 
 
-    private static function parseChunkLength(string $header): int
+    private static function parseChunkLength(string $header, bool $requireSignature): int
     {
         $parts = explode(';', $header);
 
@@ -433,17 +434,15 @@ final class ChunkedPayloadDecoder
          * We validate presence but do not verify
          * the chained SigV4 signature here.
          */
-        if (
-            !isset($parts[1]) ||
-            !str_starts_with(
-                $parts[1],
-                'chunk-signature='
-            )
-        ) {
+        if ($requireSignature && ! isset($parts[1])) {
 
             throw new InvalidRequestException(
                 'Missing chunk signature.'
             );
+        }
+
+        if (isset($parts[1]) && ! str_starts_with($parts[1], 'chunk-signature=')) {
+            throw new InvalidRequestException('Malformed chunk signature extension.');
         }
 
 
