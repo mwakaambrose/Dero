@@ -50,6 +50,68 @@ final class ChunkedPayloadDecoder
         ?callable $onChunk = null
     ): int {
 
+        $raw = fopen('php://temp/maxmemory:8388608', 'r+b');
+
+        if ($raw === false) {
+            throw new InvalidRequestException(
+                'Unable to create request payload stream.'
+            );
+        }
+
+        while (! feof($input)) {
+            $chunk = fread($input, self::READ_SIZE);
+
+            if ($chunk === false) {
+                fclose($raw);
+
+                throw new InvalidRequestException('Unable to read request payload.');
+            }
+
+            if ($chunk !== '' && fwrite($raw, $chunk) !== strlen($chunk)) {
+                fclose($raw);
+
+                throw new InvalidRequestException('Unable to buffer request payload.');
+            }
+        }
+
+        rewind($raw);
+
+        try {
+            return self::decodeFromStream($raw, $output, $onChunk);
+        } catch (InvalidRequestException $directFailure) {
+            // The direct parse may have consumed an outer HTTP chunk layer as
+            // though it were AWS framing. Retry from the untouched raw stream
+            // using the explicit outer-layer de-framer.
+            rewind($raw);
+            ftruncate($output, 0);
+            rewind($output);
+
+            try {
+                return self::decodeOuterHttpThenAws($raw, $output, $onChunk);
+            } catch (InvalidRequestException) {
+                throw $directFailure;
+            } finally {
+                fclose($raw);
+            }
+        } finally {
+            if (is_resource($raw)) {
+                fclose($raw);
+            }
+        }
+    }
+
+    /**
+     * Decode a stream that contains only AWS aws-chunked framing.
+     *
+     * @param resource $input
+     * @param resource $output
+     */
+    private static function decodeFromStream(
+        mixed $input,
+        mixed $output,
+        ?callable $onChunk = null
+    ): int {
+
         $decoded = 0;
 
         $firstHeader = self::readHeaderLine($input);
@@ -99,7 +161,7 @@ final class ChunkedPayloadDecoder
             }
 
             rewind($inner);
-            $decoded = self::decodeTo($inner, $output, $onChunk);
+            $decoded = self::decodeFromStream($inner, $output, $onChunk);
             fclose($inner);
 
             return $decoded;
@@ -186,6 +248,55 @@ final class ChunkedPayloadDecoder
                     'Truncated chunked payload.'
                 );
             }
+        }
+    }
+
+    /**
+     * Remove an outer HTTP Transfer-Encoding: chunked layer, then decode AWS
+     * framing from the resulting stream.
+     *
+     * @param resource $input
+     * @param resource $output
+     */
+    private static function decodeOuterHttpThenAws(
+        mixed $input,
+        mixed $output,
+        ?callable $onChunk = null
+    ): int {
+        $header = self::readHeaderLine($input);
+
+        if ($header === null) {
+            throw new InvalidRequestException('Truncated HTTP chunked payload.');
+        }
+
+        $inner = fopen('php://temp/maxmemory:8388608', 'r+b');
+
+        if ($inner === false) {
+            throw new InvalidRequestException('Unable to create decoded payload stream.');
+        }
+
+        try {
+            while (true) {
+                $length = self::parseHttpChunkLength($header);
+
+                if ($length === 0) {
+                    self::consumeTrailers($input);
+                    break;
+                }
+
+                self::copyHttpChunk($input, $inner, $length);
+                $header = self::readHeaderLine($input);
+
+                if ($header === null) {
+                    throw new InvalidRequestException('Truncated HTTP chunked payload.');
+                }
+            }
+
+            rewind($inner);
+
+            return self::decodeFromStream($inner, $output, $onChunk);
+        } finally {
+            fclose($inner);
         }
     }
 

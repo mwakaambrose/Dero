@@ -28,6 +28,17 @@ function httpChunkedBody(string $body): string
     return dechex(strlen($body))."\r\n".$body."\r\n0\r\n\r\n";
 }
 
+function splitHttpChunkedBody(string $body, int $size): string
+{
+    $wire = '';
+
+    foreach (str_split($body, $size) as $chunk) {
+        $wire .= dechex(strlen($chunk))."\r\n".$chunk."\r\n";
+    }
+
+    return $wire."0\r\n\r\n";
+}
+
 /**
  * @return resource
  */
@@ -76,6 +87,19 @@ it('strips an outer HTTP chunked transfer layer', function () {
     rewind($output);
 
     expect(stream_get_contents($output))->toBe('nested');
+});
+
+it('strips an outer layer whose boundaries split AWS framing', function () {
+    $output = outputStream();
+
+    ChunkedPayloadDecoder::decodeTo(
+        chunkStream(splitHttpChunkedBody(chunkedBody(['split-header', str_repeat('x', 32)]), 7)),
+        $output,
+    );
+
+    rewind($output);
+
+    expect(stream_get_contents($output))->toBe('split-header'.str_repeat('x', 32));
 });
 
 it('reassembles multiple chunks in order', function () {
