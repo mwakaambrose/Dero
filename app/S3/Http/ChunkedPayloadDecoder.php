@@ -52,17 +52,62 @@ final class ChunkedPayloadDecoder
 
         $decoded = 0;
 
-        while (true) {
+        $firstHeader = self::readHeaderLine($input);
 
-            $header = self::readHeaderLine($input);
+        if ($firstHeader === null) {
+            throw new InvalidRequestException(
+                'Truncated chunked payload.'
+            );
+        }
 
+        // Some FastCGI/Nginx deployments expose the outer HTTP
+        // Transfer-Encoding: chunked layer to PHP. Strip that layer before
+        // parsing the inner AWS aws-chunked framing. The temporary stream is
+        // disk-backed after its memory threshold, so this does not put the
+        // object on the PHP heap.
+        if (self::isHttpChunkHeader($firstHeader)) {
+            $inner = fopen('php://temp/maxmemory:8388608', 'r+b');
 
-            if ($header === null) {
+            if ($inner === false) {
                 throw new InvalidRequestException(
-                    'Truncated chunked payload.'
+                    'Unable to create decoded payload stream.'
                 );
             }
 
+            self::copyHttpChunk($input, $inner, hexdec(explode(';', $firstHeader, 2)[0]));
+
+            while (true) {
+                $header = self::readHeaderLine($input);
+
+                if ($header === null) {
+                    fclose($inner);
+
+                    throw new InvalidRequestException(
+                        'Truncated HTTP chunked payload.'
+                    );
+                }
+
+                $length = self::parseHttpChunkLength($header);
+
+                if ($length === 0) {
+                    self::consumeTrailers($input);
+
+                    break;
+                }
+
+                self::copyHttpChunk($input, $inner, $length);
+            }
+
+            rewind($inner);
+            $decoded = self::decodeTo($inner, $output, $onChunk);
+            fclose($inner);
+
+            return $decoded;
+        }
+
+        $header = $firstHeader;
+
+        while (true) {
 
             $length = self::parseChunkLength($header);
 
@@ -133,6 +178,62 @@ final class ChunkedPayloadDecoder
                     'Invalid chunk data terminator.'
                 );
             }
+
+            $header = self::readHeaderLine($input);
+
+            if ($header === null) {
+                throw new InvalidRequestException(
+                    'Truncated chunked payload.'
+                );
+            }
+        }
+    }
+
+    private static function isHttpChunkHeader(string $header): bool
+    {
+        $hex = explode(';', $header, 2)[0];
+
+        return preg_match('/^[0-9a-fA-F]+$/', $hex) === 1
+            && ! str_contains($header, 'chunk-signature=');
+    }
+
+    private static function parseHttpChunkLength(string $header): int
+    {
+        $hex = explode(';', $header, 2)[0];
+
+        if (preg_match('/^[0-9a-fA-F]+$/', $hex) !== 1) {
+            throw new InvalidRequestException('Malformed HTTP chunk header.');
+        }
+
+        return hexdec($hex);
+    }
+
+    /**
+     * Copy one HTTP transfer chunk into the inner AWS payload stream.
+     *
+     * @param resource $input
+     * @param resource $output
+     */
+    private static function copyHttpChunk(mixed $input, mixed $output, int $length): void
+    {
+        $remaining = $length;
+
+        while ($remaining > 0) {
+            $chunk = fread($input, min(self::READ_SIZE, $remaining));
+
+            if ($chunk === false || $chunk === '') {
+                throw new InvalidRequestException('Truncated HTTP chunked payload.');
+            }
+
+            if (fwrite($output, $chunk) !== strlen($chunk)) {
+                throw new InvalidRequestException('Unable to write decoded payload.');
+            }
+
+            $remaining -= strlen($chunk);
+        }
+
+        if (fread($input, 2) !== "\r\n") {
+            throw new InvalidRequestException('Invalid HTTP chunk terminator.');
         }
     }
 

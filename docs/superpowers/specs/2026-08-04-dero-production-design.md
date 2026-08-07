@@ -55,9 +55,11 @@ cache headers on Vite's fingerprinted build output.
 
 - `client_max_body_size` from `S3_MAX_UPLOAD_SIZE`. Sized deliberately — not "0" to
   disable the limit, which converts a request-size bug into a disk-exhaustion incident.
-- `proxy_request_buffering off` / `fastcgi_request_buffering off` — **required**. With
-  buffering on, Nginx spools the entire upload to disk before PHP sees a byte, which
-  defeats the streaming design in spec A §10 and doubles the write I/O for every upload.
+- `fastcgi_request_buffering on` — **required** for PHP-FPM. AWS CLI uses HTTP
+  `Transfer-Encoding: chunked` around its inner `aws-chunked` payload; buffering off
+  can expose `php://input` as an empty stream when Laravel opens it. Nginx may spool
+  the request to temporary disk, while PHP still streams the completed body into
+  object storage without buffering the object in application memory.
 - Extended `fastcgi_read_timeout` and `send_timeout` for large transfers.
 - `gzip off` for object responses — objects are opaque bytes and are frequently already
   compressed. Re-compressing them wastes CPU and breaks `Content-Length`.

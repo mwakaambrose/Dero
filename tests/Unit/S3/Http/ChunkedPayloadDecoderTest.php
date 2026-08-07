@@ -23,6 +23,11 @@ function chunkedBody(array $chunks): string
     return $body.'0;chunk-signature='.str_repeat('a', 64)."\r\n\r\n";
 }
 
+function httpChunkedBody(string $body): string
+{
+    return dechex(strlen($body))."\r\n".$body."\r\n0\r\n\r\n";
+}
+
 /**
  * @return resource
  */
@@ -58,6 +63,19 @@ it('decodes a single chunk', function () {
 
     expect($size)->toBe(11)
         ->and(stream_get_contents($output))->toBe('hello world');
+});
+
+it('strips an outer HTTP chunked transfer layer', function () {
+    $output = outputStream();
+
+    ChunkedPayloadDecoder::decodeTo(
+        chunkStream(httpChunkedBody(chunkedBody(['nested']))),
+        $output,
+    );
+
+    rewind($output);
+
+    expect(stream_get_contents($output))->toBe('nested');
 });
 
 it('reassembles multiple chunks in order', function () {

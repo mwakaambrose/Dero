@@ -155,10 +155,12 @@ sudo certbot --nginx -d dero.example.com -d s3.dero.example.com
 Four settings in the S3 block are load-bearing, and three of them fail in ways
 that are hard to diagnose:
 
-**`fastcgi_request_buffering off;`** — required. With buffering on, Nginx spools
-the entire upload to disk before PHP sees a byte. That defeats the streaming
-design completely, doubles the write I/O for every upload, and turns a 1 GB
-upload into 1 GB of temporary file before any work starts.
+**`fastcgi_request_buffering on;`** — required for PHP-FPM. AWS CLI uses HTTP
+`Transfer-Encoding: chunked` around its inner `aws-chunked` payload; with
+buffering disabled, PHP-FPM can expose `php://input` as an empty stream when
+Laravel opens it. Nginx may spool the request to temporary disk, while PHP
+still streams the completed body into object storage without buffering the
+object in application memory.
 
 **`client_max_body_size`** set deliberately from `S3_MAX_UPLOAD_SIZE`, not `0`.
 Disabling the limit converts a request-size bug into a disk-exhaustion incident.
