@@ -52,16 +52,6 @@ final class ChunkedPayloadDecoder
 
         $decoded = 0;
 
-        $peek = fread($input, 512);
-
-        logger()->info('AWS RAW BODY PREFIX', [
-            'length' => strlen($peek),
-            'hex' => bin2hex($peek),
-            'text' => $peek,
-        ]);
-
-        rewind($input);
-
         while (true) {
 
             $header = self::readHeaderLine($input);
@@ -86,18 +76,6 @@ final class ChunkedPayloadDecoder
              */
             if ($length === 0) {
 
-                // consume CRLF after:
-                // 0;chunk-signature=xxxx\r\n
-
-                $separator = fread($input, 2);
-
-                if ($separator !== "\r\n") {
-                    throw new InvalidRequestException(
-                        'Invalid terminating chunk.'
-                    );
-                }
-
-
                 self::consumeTrailers($input);
 
 
@@ -116,24 +94,11 @@ final class ChunkedPayloadDecoder
                 );
 
                 if ($chunk === false || $chunk === '') {
-
-                    logger()->error('AWS CHUNK EOF', [
-                        'expected_remaining' => $remaining,
-                        'stream_meta' => stream_get_meta_data($input),
-                    ]);
-
                     throw new InvalidRequestException(
                         'Truncated chunked payload.'
                     );
                 }
 
-
-                if ($chunk === false || $chunk === '') {
-
-                    throw new InvalidRequestException(
-                        'Truncated chunked payload.'
-                    );
-                }
 
                 $written = fwrite($output, $chunk);
 

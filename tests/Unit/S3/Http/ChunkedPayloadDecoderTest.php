@@ -97,6 +97,27 @@ it('handles an empty body consisting only of the terminating chunk', function ()
     expect(ChunkedPayloadDecoder::decodeTo(chunkStream(chunkedBody([])), outputStream()))->toBe(0);
 });
 
+it('decodes from a non-seekable input stream', function () {
+    $payload = chunkedBody(['streamed']);
+    $process = proc_open(
+        ['printf', '%s', $payload],
+        [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+        $pipes,
+    );
+
+    expect($process)->not->toBeFalse();
+
+    fclose($pipes[2]);
+    $output = outputStream();
+
+    ChunkedPayloadDecoder::decodeTo($pipes[1], $output);
+    fclose($pipes[1]);
+    proc_close($process);
+    rewind($output);
+
+    expect(stream_get_contents($output))->toBe('streamed');
+});
+
 it('invokes the callback once per data chunk', function () {
     $seen = [];
 

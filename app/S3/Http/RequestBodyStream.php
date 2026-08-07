@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\S3\Http;
 
 use Illuminate\Http\Request;
+use LogicException;
 use RuntimeException;
 
 final class RequestBodyStream
@@ -21,7 +22,7 @@ final class RequestBodyStream
      */
     public static function open(Request $request): mixed
     {
-        $input = self::rawStream();
+        $input = self::rawStream($request);
 
         $payloadHash = strtoupper(
             (string) $request->headers->get(
@@ -74,27 +75,51 @@ final class RequestBodyStream
      * Open the untouched HTTP request body.
      *
      * IMPORTANT:
-     * Do not use Request::getContent() here.
+     * Request::getContent(asResource: true) is used deliberately. It returns
+     * the live php://input stream under FPM, while preserving the request body
+     * resource supplied by Laravel's test client.
      *
      * AWS streaming uploads use:
      *
      * Transfer-Encoding: chunked
      * Content-Encoding: aws-chunked
      *
-     * and the body must be consumed exactly once from php://input.
+     * and the body must be consumed exactly once from that resource.
      *
      * @return resource
      */
-    private static function rawStream(): mixed
+    private static function rawStream(Request $request): mixed
     {
-        $input = fopen('php://input', 'rb');
-
-        if ($input === false) {
-            throw new RuntimeException(
-                'Unable to open request body stream.'
-            );
+        try {
+            $input = $request->getContent(asResource: true);
+        } catch (LogicException) {
+            return self::streamFromString($request->getContent());
         }
 
-        return $input;
+        if (is_resource($input)) {
+            return $input;
+        }
+
+        return self::streamFromString($request->getContent());
+    }
+
+    /**
+     * This is primarily the fallback for the framework test client, whose
+     * body lives on the Request object rather than in php://input.
+     *
+     * @return resource
+     */
+    private static function streamFromString(string $contents): mixed
+    {
+        $stream = fopen('php://temp/maxmemory:8388608', 'r+b');
+
+        if ($stream === false) {
+            throw new RuntimeException('Unable to create request stream.');
+        }
+
+        fwrite($stream, $contents);
+        rewind($stream);
+
+        return $stream;
     }
 }
