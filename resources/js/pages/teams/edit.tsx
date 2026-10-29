@@ -1,7 +1,8 @@
 import { Form, Head, router } from '@inertiajs/react';
-import { ChevronDown, Mail, UserPlus, X } from 'lucide-react';
+import { ChevronDown, Mail, UserPlus, UserRoundPlus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import CancelInvitationModal from '@/components/cancel-invitation-modal';
+import CreateMemberModal from '@/components/create-member-modal';
 import DeleteTeamModal from '@/components/delete-team-modal';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -53,6 +54,7 @@ export default function TeamEdit({
     const getInitials = useInitials();
 
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+    const [createMemberDialogOpen, setCreateMemberDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [removeMemberDialogOpen, setRemoveMemberDialogOpen] = useState(false);
     const [memberToRemove, setMemberToRemove] = useState<TeamMember | null>(
@@ -156,14 +158,27 @@ export default function TeamEdit({
                             }
                         />
 
-                        {permissions.canCreateInvitation ? (
-                            <Button
-                                data-test="invite-member-button"
-                                onClick={() => setInviteDialogOpen(true)}
-                            >
-                                <UserPlus /> Invite member
-                            </Button>
-                        ) : null}
+                        <div className="flex items-center gap-2">
+                            {permissions.canAddMember ? (
+                                <Button
+                                    variant="outline"
+                                    data-test="create-member-button"
+                                    onClick={() =>
+                                        setCreateMemberDialogOpen(true)
+                                    }
+                                >
+                                    <UserRoundPlus /> Create member
+                                </Button>
+                            ) : null}
+                            {permissions.canCreateInvitation ? (
+                                <Button
+                                    data-test="invite-member-button"
+                                    onClick={() => setInviteDialogOpen(true)}
+                                >
+                                    <UserPlus /> Invite member
+                                </Button>
+                            ) : null}
+                        </div>
                     </div>
 
                     <div className="space-y-3">
@@ -353,6 +368,15 @@ export default function TeamEdit({
                     availableRoles={availableRoles}
                     open={inviteDialogOpen}
                     onOpenChange={setInviteDialogOpen}
+                />
+            ) : null}
+
+            {permissions.canAddMember ? (
+                <CreateMemberModal
+                    team={team}
+                    availableRoles={availableRoles}
+                    open={createMemberDialogOpen}
+                    onOpenChange={setCreateMemberDialogOpen}
                 />
             ) : null}
 

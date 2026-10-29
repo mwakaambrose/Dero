@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Teams;
 
+use App\Actions\Teams\CreateTeamMember;
 use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Teams\CreateTeamMemberRequest;
 use App\Http\Requests\Teams\UpdateTeamMemberRequest;
 use App\Models\Team;
 use App\Models\User;
@@ -13,6 +15,24 @@ use Inertia\Inertia;
 
 class TeamMemberController extends Controller
 {
+    /**
+     * Create a user account and add it to the team.
+     */
+    public function store(CreateTeamMemberRequest $request, Team $team, CreateTeamMember $createTeamMember): RedirectResponse
+    {
+        Gate::authorize('addMember', $team);
+
+        $createTeamMember->handle(
+            $team,
+            $request->safe()->only(['name', 'email', 'password']),
+            TeamRole::from($request->validated('role')),
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Member created.')]);
+
+        return to_route('teams.edit', ['team' => $team->slug]);
+    }
+
     /**
      * Update the specified team member's role.
      */

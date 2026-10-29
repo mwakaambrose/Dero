@@ -127,3 +127,58 @@ test('removed member current team is set to personal team', function () {
 
     expect($member->fresh()->current_team_id)->toEqual($personalTeam->id);
 });
+
+test('owners can create a user directly as a team member', function () {
+    $owner = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+
+    $this
+        ->actingAs($owner)
+        ->post(route('teams.members.store', $team), [
+            'name' => 'New Person',
+            'email' => 'new@example.com',
+            'password' => 'password-123-Abc',
+            'password_confirmation' => 'password-123-Abc',
+            'role' => TeamRole::Admin->value,
+        ])
+        ->assertRedirect(route('teams.edit', $team));
+
+    $created = User::where('email', 'new@example.com')->firstOrFail();
+
+    expect($created->hasVerifiedEmail())->toBeTrue()
+        ->and($created->teamRole($team))->toBe(TeamRole::Admin)
+        ->and($created->personalTeam())->not->toBeNull()
+        ->and($created->isCurrentTeam($team))->toBeTrue();
+});
+
+test('team members cannot be created with an existing email, the owner role or by non owners', function () {
+    $owner = User::factory()->create();
+    $admin = User::factory()->create();
+    $existing = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
+    $team->members()->attach($admin, ['role' => TeamRole::Admin->value]);
+
+    $payload = [
+        'name' => 'New Person',
+        'email' => 'new@example.com',
+        'password' => 'password-123-Abc',
+        'password_confirmation' => 'password-123-Abc',
+        'role' => TeamRole::Member->value,
+    ];
+
+    $this->actingAs($owner)
+        ->post(route('teams.members.store', $team), [...$payload, 'email' => $existing->email])
+        ->assertSessionHasErrors('email');
+
+    $this->actingAs($owner)
+        ->post(route('teams.members.store', $team), [...$payload, 'role' => TeamRole::Owner->value])
+        ->assertSessionHasErrors('role');
+
+    $this->actingAs($admin)
+        ->post(route('teams.members.store', $team), $payload)
+        ->assertForbidden();
+
+    expect(User::where('email', 'new@example.com')->exists())->toBeFalse();
+});
